@@ -1,0 +1,42 @@
+{
+  "name": "landscape",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev --turbopack",
+    "build": "next build --turbopack",
+    "start": "next start",
+    "lint": "eslint"
+  },
+  "dependencies": {
+    "@emotion/react": "^11.14.0",
+    "@emotion/styled": "^11.14.1",
+    "@mui/icons-material": "^7.3.1",
+    "@mui/lab": "^7.0.0-beta.16",
+    "@mui/material": "^7.3.1",
+    "@mui/material-nextjs": "^7.3.0",
+    "@mui/x-date-pickers": "^8.10.2",
+    "@neondatabase/serverless": "^1.0.1",
+    "@prisma/client": "^6.14.0",
+    "dayjs": "^1.11.13",
+    "lucide-react": "^0.542.0",
+    "next": "15.5.0",
+    "prisma": "^6.14.0",
+    "react": "19.1.0",
+    "react-dom": "19.1.0"
+  },
+  "devDependencies": {
+    "@eslint/eslintrc": "^3",
+    "@tailwindcss/forms": "^0.5.10",
+    "@tailwindcss/typography": "^0.5.16",
+    "@types/node": "^20",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "autoprefixer": "^10.4.21",
+    "eslint": "^9",
+    "eslint-config-next": "15.5.0",
+    "postcss": "^8.5.6",
+    "tailwindcss": "^3.4.17",
+    "typescript": "^5"
+  }
+}
