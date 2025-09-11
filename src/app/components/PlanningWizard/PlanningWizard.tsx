@@ -683,7 +683,7 @@ const PlanningWizard: React.FC = () => {
 
   return (
     <DndProvider backend={HTML5Backend}>
-      <div className="h-screen flex flex-col bg-gray-950">
+      <div className="min-h-screen flex flex-col bg-gray-950">
         {viewContext.mode === 'project' && (
           <ProjectCanvas
             project={project}
