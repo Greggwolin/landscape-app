@@ -1,7 +1,7 @@
 'use client'
 
 import React from 'react'
-import { Project, Area } from './PlanningWizard'
+import { Project } from './PlanningWizard'
 import DropZone from './DropZone'
 
 interface ProjectCanvasProps {
@@ -23,16 +23,10 @@ const ProjectCanvas: React.FC<ProjectCanvasProps> = ({
   onOpenPhase,
   onOpenArea,
   onOpenParcel,
-  showAreaForm,
+  showAreaForm: _showAreaForm,
   showPhaseForm,
   openDetailCard
 }) => {
-  const handleDrop = (item: { type: string }) => {
-    if (item.type === 'area') {
-      onAddArea()
-    }
-  }
-
   const handlePhaseDrop = (areaId: string) => (item: { type: string }) => {
     if (item.type === 'phase') {
       onAddPhase(areaId)

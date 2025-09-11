@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Plus, Edit2, Trash2, Save, X, ChevronRight, ChevronDown, Settings } from 'lucide-react';
+import { Plus, Edit2, Save, ChevronRight, ChevronDown, Settings } from 'lucide-react';
 
 // Type definitions
 interface Family {

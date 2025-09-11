@@ -25,32 +25,41 @@ interface Phase {
 }
 
 const PlanningContent: React.FC = () => {
-  const [parcels, setParcels] = useState<Parcel[]>([]);
-  const [phases, setPhases] = useState<Phase[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [parcels, setParcels] = useState<Parcel[]>([])
+  const [phases, setPhases] = useState<Phase[]>([])
+  const [loading, setLoading] = useState(true)
+  const [projectId, setProjectId] = useState<number | null>(null)
 
   useEffect(() => {
-    fetchData();
-  }, []);
+    // Load a default project id, then fetch planning data that depends on it
+    const load = async () => {
+      try {
+        // Get available projects and pick the first for now
+        const projRes = await fetch('/api/projects')
+        const projects = await projRes.json().catch(() => [])
+        const id = Array.isArray(projects) && projects.length > 0 ? Number(projects[0]?.project_id) : null
+        setProjectId(id)
+        if (!id) return
 
-  const fetchData = async () => {
-    try {
-      const [parcelsRes, phasesRes] = await Promise.all([
-        fetch('/api/parcels'),
-        fetch('/api/phases')
-      ]);
-      
-      const parcelsData = await parcelsRes.json();
-      const phasesData = await phasesRes.json();
-      
-      setParcels(parcelsData);
-      setPhases(phasesData);
-    } catch (error) {
-      console.error('Error fetching planning data:', error);
-    } finally {
-      setLoading(false);
+        // Fetch parcels and phases for the selected project
+        const [parcelsRes, phasesRes] = await Promise.all([
+          fetch(`/api/parcels?project_id=${id}`),
+          fetch(`/api/phases?project_id=${id}`)
+        ])
+        const parcelsData = await parcelsRes.json().catch(() => [])
+        const phasesData = await phasesRes.json().catch(() => [])
+        setParcels(Array.isArray(parcelsData) ? parcelsData : [])
+        setPhases(Array.isArray(phasesData) ? phasesData : [])
+      } catch (error) {
+        console.error('Error fetching planning data:', error)
+        setParcels([])
+        setPhases([])
+      } finally {
+        setLoading(false)
+      }
     }
-  };
+    load()
+  }, [])
 
   const formatNumber = (num: number) => {
     return new Intl.NumberFormat('en-US', {

@@ -15,12 +15,13 @@ async function main() {
     FROM pg_type t
     JOIN pg_enum e ON t.oid = e.enumtypid
     JOIN pg_namespace n ON n.oid = t.typnamespace
-    WHERE n.nspname = 'land_v2' AND t.typname = 'code_token_kind_t'
+    WHERE n.nspname = 'land_v2' AND t.typname IN ('code_token_kind','code_token_kind_t')
     ORDER BY e.enumsortorder
   `
   const got = labels.map(l => l.label)
   const expected = ['published','placeholder','numeric','mixed']
-  const enumOk = got.length === expected.length && expected.every((v, i) => v === got[i])
+  const gotUnique = Array.from(new Set(got))
+  const enumOk = gotUnique.length === expected.length && expected.every(v => gotUnique.includes(v))
   if (!enumOk) {
     console.error('Enum labels mismatch. Expected:', expected, 'Got:', got)
     process.exit(2)

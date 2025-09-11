@@ -248,7 +248,7 @@ const PlanningWizard: React.FC = () => {
   }, [])
 
   // Navigate to area view
-  const navigateToArea = useCallback((areaId: string) => {
+  const navigateToArea = useCallback((_areaId: string) => {
     // For now, just go back to project view since we don't have a dedicated area view
     // In the future, you could implement a dedicated area view
     setViewContext({

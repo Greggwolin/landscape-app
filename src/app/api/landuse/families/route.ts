@@ -19,7 +19,7 @@ export async function GET() {
         WHERE COALESCE(active, true) = true
         ORDER BY COALESCE(ord, 0), name
       `;
-    } catch (error1) {
+    } catch (_e) {
       // Try simpler query without optional columns
       try {
         families = await sql`

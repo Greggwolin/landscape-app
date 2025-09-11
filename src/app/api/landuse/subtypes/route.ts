@@ -23,7 +23,7 @@ export async function GET() {
         WHERE COALESCE(s.active, true) = true
         ORDER BY s.family_id, COALESCE(s.ord, 0), s.name
       `;
-    } catch (error1) {
+    } catch (_e) {
       // Try simpler query without joins
       try {
         subtypes = await sql`

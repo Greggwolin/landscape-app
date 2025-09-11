@@ -19,6 +19,15 @@ type TableInfo = { columns: Column[]; foreignKeys: FK[] }
 export const dynamic = 'force-dynamic'
 
 export default async function DbSchemaPage() {
+  if (process.env.NODE_ENV === 'production' && process.env.ADMIN_ACCESS !== 'true') {
+    return (
+      <div className="p-6 bg-gray-950 min-h-screen text-white">
+        <div className="bg-gray-800 rounded border border-gray-700 p-4">
+          <div className="text-sm text-gray-300">Schema page disabled in production.</div>
+        </div>
+      </div>
+    )
+  }
   const tables = await sql<{ table_name: string }[]>`
     SELECT table_name
     FROM information_schema.tables

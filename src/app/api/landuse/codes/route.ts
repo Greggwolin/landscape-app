@@ -30,7 +30,7 @@ export async function GET() {
         WHERE COALESCE(l.active, true) = true
         ORDER BY l.landuse_code
       `;
-    } catch (error1) {
+    } catch (_e1) {
       // Try simpler query with just tbl_landuse
       try {
         landuses = await sql`
@@ -53,7 +53,7 @@ export async function GET() {
           WHERE COALESCE(active, true) = true
           ORDER BY landuse_code
         `;
-      } catch (error2) {
+      } catch (_e2) {
         // Try even simpler without optional columns
         try {
           landuses = await sql`

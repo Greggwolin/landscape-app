@@ -1,23 +1,22 @@
 'use client'
 
-import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react'
+import React, { useState, useEffect, useMemo, useRef } from 'react'
 import {
   useReactTable,
   getCoreRowModel,
   createColumnHelper,
   flexRender,
   type ColumnDef,
-  type Row,
 } from '@tanstack/react-table'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+// Select components not currently used in this file; using custom select below
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { cn } from '@/lib/utils'
-import * as SelectPrimitive from '@radix-ui/react-select'
+// Radix Select primitives not used; remove to reduce bundle and lint noise
 
 interface LandUseFamily {
   family_id: string
