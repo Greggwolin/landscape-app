@@ -11,7 +11,6 @@
 import {} from '@mui/material/styles'
 
 declare module '@mui/material/styles' {
-  // eslint-disable-next-line lines-around-comment
   // Theme
   interface Theme {
     shape: {

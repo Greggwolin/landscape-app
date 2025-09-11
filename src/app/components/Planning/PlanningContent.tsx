@@ -3,8 +3,8 @@ import React, { useState, useEffect } from 'react';
 
 interface Parcel {
   parcel_id: number;
-  area: number;
-  phase: string;
+  area_no: number;
+  phase_name: string;
   parcel_name: string;
   usecode: string;
   product: string;
@@ -16,7 +16,7 @@ interface Parcel {
 interface Phase {
   phase_id: number;
   area_no: number;
-  phase: string;
+  phase_name: string;
   gross_acres: number;
   net_acres: number;
   units_total: number;
@@ -60,8 +60,8 @@ const PlanningContent: React.FC = () => {
   };
 
   const getAreaStats = (areaNo: number) => {
-    const areaParcels = parcels.filter(p => p.area === areaNo);
-    const areaPhases = [...new Set(areaParcels.map(p => p.phase))].sort();
+    const areaParcels = parcels.filter(p => p.area_no === areaNo);
+    const areaPhases = [...new Set(areaParcels.map(p => p.phase_name))].sort();
     
     return {
       grossAcres: Math.round(areaParcels.reduce((sum, p) => sum + (p.acres || 0), 0)),
@@ -132,7 +132,7 @@ const PlanningContent: React.FC = () => {
                 <tbody>
                   {phases.map((phase, index) => (
                     <tr key={phase.phase_id} className={`border-b border-gray-700 hover:bg-gray-700 ${index % 2 === 0 ? 'bg-gray-800' : 'bg-gray-850'}`}>
-                      <td className="py-2 px-2 text-gray-300">{phase.area_no}.{phase.phase}</td>
+                  <td className="py-2 px-2 text-gray-300">{phase.phase_name}</td>
                       <td className="py-2 px-2 text-center text-gray-300">{formatNumber(phase.gross_acres)}</td>
                       <td className="py-2 px-2 text-center text-gray-300">{formatNumber(phase.net_acres)}</td>
                       <td className="py-2 px-2 text-center text-gray-300">{phase.units_total}</td>
@@ -179,8 +179,8 @@ const PlanningContent: React.FC = () => {
             <tbody>
               {parcels.map((parcel, index) => (
                 <tr key={parcel.parcel_id} className={`border-b border-gray-700 hover:bg-gray-700 ${index % 2 === 0 ? 'bg-gray-800' : 'bg-gray-850'}`}>
-                  <td className="px-2 py-1.5 text-gray-300">{parcel.area}</td>
-                  <td className="px-2 py-1.5 text-gray-300">{parcel.phase}</td>
+                  <td className="px-2 py-1.5 text-gray-300">{parcel.area_no}</td>
+                  <td className="px-2 py-1.5 text-gray-300">{parcel.phase_name}</td>
                   <td className="px-2 py-1.5 text-gray-300">{parcel.parcel_name}</td>
                   <td className="px-2 py-1.5 text-center">
                     <span className={`px-1.5 py-0.5 rounded text-xs font-medium ${

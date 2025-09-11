@@ -29,6 +29,7 @@ const NavbarContent = () => {
           href={`https://github.com/themeselection/${process.env.NEXT_PUBLIC_REPO_NAME}`}
           target='_blank'
         >
+          {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             height={24}
             alt='GitHub Repo stars'

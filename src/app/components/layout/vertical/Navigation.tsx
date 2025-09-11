@@ -42,25 +42,28 @@ const Navigation = () => {
   const { isBreakpointReached, toggleVerticalNav } = useVerticalNav()
 
   // Refs
-  const shadowRef = useRef(null)
+  const shadowRef = useRef<HTMLDivElement | null>(null)
 
-  const scrollMenu = (container: any, isPerfectScrollbar: boolean) => {
-    container = isBreakpointReached || !isPerfectScrollbar ? container.target : container
+  const scrollMenu = (
+    container: { target?: { scrollTop?: number } } | { scrollTop?: number },
+    isPerfectScrollbar: boolean
+  ) => {
+    const target = (isBreakpointReached || !isPerfectScrollbar)
+      ? (container as { target?: { scrollTop?: number } }).target
+      : (container as { scrollTop?: number })
 
-    if (shadowRef && container.scrollTop > 0) {
-      // @ts-ignore
-      if (!shadowRef.current.classList.contains('scrolled')) {
-        // @ts-ignore
-        shadowRef.current.classList.add('scrolled')
-      }
+    const scrollTop = (target && 'scrollTop' in target ? target.scrollTop : 0) ?? 0
+    const el = shadowRef.current
+    if (!el) return
+
+    if (scrollTop > 0) {
+      if (!el.classList.contains('scrolled')) el.classList.add('scrolled')
     } else {
-      // @ts-ignore
-      shadowRef.current.classList.remove('scrolled')
+      el.classList.remove('scrolled')
     }
   }
 
   return (
-    // eslint-disable-next-line lines-around-comment
     // Sidebar Vertical Menu
     <VerticalNav customStyles={navigationCustomStyles(theme)}>
       {/* Nav Header including Logo & nav toggle icons  */}

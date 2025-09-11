@@ -5,7 +5,11 @@ import React, { useState, useEffect } from 'react';
 import Header from './components/Header';
 import Navigation from './components/Navigation';
 import BudgetContent from './components/Budget/BudgetContent';
+import MarketAssumptions from './components/MarketAssumptions';
 import PlanningContent from './components/Planning/PlanningContent';
+import PlanningWizard from './components/PlanningWizard/PlanningWizard';
+import CategoryTree from './components/Admin/CategoryTree';
+import LandUseSchema from './components/LandUse/LandUseSchema';
 
 interface Project {
   project_id: number;
@@ -15,7 +19,7 @@ interface Project {
 }
 
 const LandscapeApp: React.FC = () => {
-  const [activeView, setActiveView] = useState('overview');
+  const [activeView, setActiveView] = useState('dashboard');
   const [projectData, setProjectData] = useState<Project | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -23,11 +27,16 @@ const LandscapeApp: React.FC = () => {
     fetchProjectData();
   }, []);
 
-  const fetchProjectData = async () => {
+  const fetchProjectData = async (projectId?: number) => {
     try {
       const response = await fetch('/api/projects');
       const projects = await response.json();
-      if (projects.length > 0) {
+      if (projectId) {
+        const selectedProject = projects.find((p: Project) => p.project_id === projectId);
+        if (selectedProject) {
+          setProjectData(selectedProject);
+        }
+      } else if (projects.length > 0) {
         setProjectData(projects[0]); // Use first project for now
       }
     } catch (error) {
@@ -37,25 +46,61 @@ const LandscapeApp: React.FC = () => {
     }
   };
 
+  const handleProjectChange = (projectId: number) => {
+    setLoading(true);
+    fetchProjectData(projectId);
+  };
+
   const renderContent = () => {
     switch (activeView) {
-      case 'overview':
-        return <OverviewContent />;
-      case 'planning':
+      // Dashboard
+      case 'dashboard':
+        return <DashboardContent />;
+      
+      // Planning section
+      case 'planning-overview':
         return <PlanningContent />;
-      case 'budget':
-        return <BudgetContent />;
+      case 'land-use':
+        return <LandUseSchema />;
+      case 'planning':
+        return <PlanningWizard />;
+      case 'mapping-gis':
+        return <ComingSoonContent title="Mapping / GIS" />;
+      
+      // Assumptions section
+      case 'acquisition':
+        return <ComingSoonContent title="Acquisition" />;
+      case 'market':
+        return <MarketAssumptions projectId={projectData?.project_id ?? null} />;
+      case 'project-costs':
+        return <BudgetContent projectId={projectData?.project_id ?? null} />;
+      case 'project-revenues':
+        return <ComingSoonContent title="Project Revenues" />;
+      
+      // Development section
+      case 'entitlements':
+        return <ComingSoonContent title="Stage 1 - Entitlements" />;
+      case 'engineering':
+        return <ComingSoonContent title="Stage 2 - Engineering" />;
+      case 'development':
+        return <ComingSoonContent title="Stage 3 - Development" />;
+      case 'disposition':
+        return <ComingSoonContent title="Project Disposition" />;
+      
+      // Ownership section
+      case 'debt':
+        return <ComingSoonContent title="Debt" />;
+      case 'equity':
+        return <ComingSoonContent title="Equity" />;
+      case 'muni-district':
+        return <ComingSoonContent title="Muni / District" />;
+      
+      // Settings
+      case 'settings':
+        return <CategoryTree />;
+      
       default:
-        return (
-          <div className="p-4">
-            <div className="bg-gray-800 rounded border border-gray-700 p-6 text-center">
-              <div className="text-gray-400 mb-1 text-sm">Coming Soon</div>
-              <div className="text-lg font-medium text-white">
-                {activeView.charAt(0).toUpperCase() + activeView.slice(1)}
-              </div>
-            </div>
-          </div>
-        );
+        return <ComingSoonContent title={activeView.charAt(0).toUpperCase() + activeView.slice(1)} />;
     }
   };
 
@@ -69,10 +114,10 @@ const LandscapeApp: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-gray-950 flex flex-col">
-      <Header projectData={projectData} />
+      <Header projectData={projectData} onProjectChange={handleProjectChange} />
       <div className="flex flex-1">
         <Navigation activeView={activeView} setActiveView={setActiveView} />
-        <main className="flex-1 overflow-auto bg-gray-950">
+        <main className="flex-1 overflow-visible bg-gray-950">
           {renderContent()}
         </main>
       </div>
@@ -80,12 +125,22 @@ const LandscapeApp: React.FC = () => {
   );
 };
 
-// Temporary placeholder for Overview
-const OverviewContent: React.FC = () => (
+// Dashboard Content (formerly Overview)
+const DashboardContent: React.FC = () => (
   <div className="p-4">
     <div className="bg-gray-800 rounded border border-gray-700 p-6 text-center">
       <div className="text-gray-400 mb-1 text-sm">Coming Soon</div>
-      <div className="text-lg font-medium text-white">Overview Dashboard</div>
+      <div className="text-lg font-medium text-white">Dashboard</div>
+    </div>
+  </div>
+);
+
+// Reusable Coming Soon Component
+const ComingSoonContent: React.FC<{ title: string }> = ({ title }) => (
+  <div className="p-4">
+    <div className="bg-gray-800 rounded border border-gray-700 p-6 text-center">
+      <div className="text-gray-400 mb-1 text-sm">Coming Soon</div>
+      <div className="text-lg font-medium text-white">{title}</div>
     </div>
   </div>
 );

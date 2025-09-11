@@ -6,6 +6,7 @@
 import * as React from "react";
 import { useServerInsertedHTML } from "next/navigation";
 import createCache from "@emotion/cache";
+import type { EmotionCache } from '@emotion/cache'
 import { CacheProvider } from "@emotion/react";
 import { ThemeProvider, CssBaseline } from "@mui/material";
 import theme from "./theme";
@@ -20,19 +21,23 @@ export default function ThemeRegistry({
 }: {
   children: React.ReactNode;
 }) {
-  const cache = React.useMemo(() => createEmotionCache(), []);
+  const cache = React.useMemo<EmotionCache>(() => createEmotionCache(), []);
   const inserted: string[] = [];
 
   // Monkey‑patch cache.insert to keep track of injected names
-  const prevInsert = cache.insert;
-  cache.insert = (...args: any[]) => {
-    const [selector, serialized] = args;
-    if (!cache.inserted[serialized.name]) {
-      inserted.push(serialized.name);
+  type InsertFn = (selector: string, serialized: { name: string }, sheet?: unknown, shouldCache?: boolean) => void
+  const prevInsert: InsertFn = (cache as unknown as { insert: InsertFn }).insert
+  ;(cache as unknown as { insert: InsertFn }).insert = (
+    selector: string,
+    serialized: { name: string },
+    sheet?: unknown,
+    shouldCache?: boolean
+  ) => {
+    if (!(cache.inserted as Record<string, boolean | string>)[serialized.name]) {
+      inserted.push(serialized.name)
     }
-    // @ts-ignore
-    return prevInsert.apply(cache, args);
-  };
+    prevInsert(selector, serialized, sheet, shouldCache)
+  }
 
   // Push collected styles into the server HTML so client matches server
   useServerInsertedHTML(() => {
@@ -43,7 +48,6 @@ export default function ThemeRegistry({
     return (
       <style
         data-emotion={`${cache.key} ${inserted.join(" ")}`}
-        // eslint-disable-next-line react/no-danger
         dangerouslySetInnerHTML={{ __html: styles }}
       />
     );
@@ -58,5 +62,3 @@ export default function ThemeRegistry({
     </CacheProvider>
   );
 }
-
-
