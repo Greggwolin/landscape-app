@@ -55,6 +55,7 @@
     "react-hook-form": "^7.62.0",
     "tailwind-merge": "^3.3.1",
     "tailwindcss-animate": "^1.0.7",
+    "swr": "^2.2.0",
     "vaul": "^1.1.2",
     "xlsx": "^0.18.5",
     "zod": "^4.1.5"

@@ -71,11 +71,11 @@ const LandscapeApp: React.FC = () => {
       
       // Planning section
       case 'planning-overview':
-        return <PlanningContent />;
+        return <PlanningContent projectId={projectData?.project_id ?? null} />;
       case 'land-use':
         return <LandUseSchema />;
       case 'planning':
-        return <PlanningWizard />;
+        return <PlanningWizard projectId={projectData?.project_id ?? null} />;
       case 'mapping-gis':
         return <ComingSoonContent title="Mapping / GIS" />;
       

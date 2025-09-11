@@ -1,5 +1,6 @@
 // app/components/Planning/PlanningContent.tsx
 import React, { useState, useEffect } from 'react';
+import useSWR from 'swr'
 import ParcelDetailCard from '../PlanningWizard/cards/ParcelDetailCard'
 
 interface Parcel {
@@ -25,49 +26,22 @@ interface Phase {
   status: string;
 }
 
-const PlanningContent: React.FC = () => {
+type Props = { projectId?: number | null }
+const PlanningContent: React.FC<Props> = ({ projectId = null }) => {
   const [parcels, setParcels] = useState<Parcel[]>([])
   const [phases, setPhases] = useState<Phase[]>([])
   const [loading, setLoading] = useState(true)
-  const [projectId, setProjectId] = useState<number | null>(null)
 
+  const fetcher = (url: string) => fetch(url).then(r => r.json())
+  const { data: parcelsData } = useSWR(projectId ? `/api/parcels?project_id=${projectId}` : null, fetcher)
+  const { data: phasesData } = useSWR(projectId ? `/api/phases?project_id=${projectId}` : null, fetcher)
   useEffect(() => {
-    // Load a default project id, then fetch planning data that depends on it
-    const load = async () => {
-      try {
-        // Get available projects and pick the first for now
-        const projRes = await fetch('/api/projects')
-        const projects = await projRes.json().catch(() => [])
-        const id = Array.isArray(projects) && projects.length > 0 ? Number(projects[0]?.project_id) : null
-        setProjectId(id)
-        if (!id) return
+    if (parcelsData) setParcels(Array.isArray(parcelsData) ? parcelsData : [])
+    if (phasesData) setPhases(Array.isArray(phasesData) ? phasesData : [])
+    if (projectId != null) setLoading(false)
+  }, [parcelsData, phasesData, projectId])
 
-        // Fetch parcels and phases for the selected project
-        const [parcelsRes, phasesRes] = await Promise.all([
-          fetch(`/api/parcels?project_id=${id}`),
-          fetch(`/api/phases?project_id=${id}`)
-        ])
-        const parcelsData = await parcelsRes.json().catch(() => [])
-        const phasesData = await phasesRes.json().catch(() => [])
-        setParcels(Array.isArray(parcelsData) ? parcelsData : [])
-        setPhases(Array.isArray(phasesData) ? phasesData : [])
-      } catch (error) {
-        console.error('Error fetching planning data:', error)
-        setParcels([])
-        setPhases([])
-      } finally {
-        setLoading(false)
-      }
-    }
-    load()
-  }, [])
-
-  const formatNumber = (num: number) => {
-    return new Intl.NumberFormat('en-US', {
-      minimumFractionDigits: 1,
-      maximumFractionDigits: 1,
-    }).format(num);
-  };
+  // number formatting helpers moved inline in JSX
 
   const getAreaStats = (areaNo: number) => {
     const areaParcels = parcels.filter(p => p.area_no === areaNo);
@@ -87,7 +61,7 @@ const PlanningContent: React.FC = () => {
 
   const openDetailForParcel = (p: Parcel) => {
     // Map Overview parcel to Wizard types (minimal fields used by card)
-    const [aStr, pStr] = String(p.phase_name).split('.')
+    const [, pStr] = String(p.phase_name).split('.')
     const areaNo = Number(p.area_no)
     const phaseNo = Number(pStr)
     const area = { id: `area-${areaNo}`, name: `Area ${areaNo}`, phases: [], saved: true }
@@ -171,15 +145,11 @@ const PlanningContent: React.FC = () => {
                 </thead>
                 <tbody>
                   {phases.map((phase, index) => (
-                    <tr key={phase.phase_id} className={`border-b border-gray-700 hover:bg-gray-700 ${index % 2 === 0 ? 'bg-gray-800' : 'bg-gray-850'}`}>
-                      <td className="py-2 px-2 text-gray-300">{phase.phase_name}</td>
-                      <td className="py-2 px-2 text-center text-gray-300">{formatNumber(phase.gross_acres)}</td>
-                      <td className="py-2 px-2 text-center text-gray-300">{formatNumber(phase.net_acres)}</td>
-                      <td className="py-2 px-2 text-center text-gray-300">{phase.units_total}</td>
-                      <td className="py-2 px-2 text-center">
-                        <button className="px-2 py-1 text-xs bg-gray-700 text-gray-300 rounded hover:bg-gray-600">Edit</button>
-                      </td>
-                    </tr>
+                    <PhaseRow
+                      key={phase.phase_id}
+                      phase={phase}
+                      index={index}
+                    />
                   ))}
                 </tbody>
               </table>
@@ -258,7 +228,11 @@ const PlanningContent: React.FC = () => {
 // Inline-editable parcel row
 const EditableParcelRow: React.FC<{ parcel: Parcel; index: number; onSaved: (p: Parcel) => void; onOpenDetail?: () => void }> = ({ parcel, index, onSaved, onOpenDetail }) => {
   const [editing, setEditing] = useState(false)
-  const [codes, setCodes] = useState<{ landuse_code: string; name: string }[]>([])
+  const [codes, setCodes] = useState<{ landuse_code: string; name: string; family_id?: string; subtype_id?: string }[]>([])
+  const [families, setFamilies] = useState<{ family_id: string; name: string }[]>([])
+  const [subtypes, setSubtypes] = useState<{ subtype_id: string; family_id: string; name: string }[]>([])
+  const [selectedFamily, setSelectedFamily] = useState<string>('')
+  const [selectedSubtype, setSelectedSubtype] = useState<string>('')
   const [draft, setDraft] = useState({
     usecode: parcel.usecode ?? '',
     product: parcel.product ?? '',
@@ -272,11 +246,19 @@ const EditableParcelRow: React.FC<{ parcel: Parcel; index: number; onSaved: (p: 
     if (editing) {
       ;(async () => {
         try {
-          const res = await fetch('/api/landuse/codes')
-          const data = await res.json()
+          const [codesRes, famRes, subRes] = await Promise.all([
+            fetch('/api/landuse/codes'),
+            fetch('/api/landuse/families'),
+            fetch('/api/landuse/subtypes')
+          ])
+          const data = await codesRes.json();
+          const fam = await famRes.json();
+          const sub = await subRes.json();
           const list = Array.isArray(data) ? data : []
-          setCodes(list.map((r: any) => ({ landuse_code: r.landuse_code, name: r.name ?? r.landuse_code })))
-        } catch (e) { console.error('Failed to load land use codes', e) }
+          setCodes(list.map((r: any) => ({ landuse_code: r.landuse_code, name: r.name ?? r.landuse_code, family_id: (r as any).family_id ?? undefined, subtype_id: (r as any).subtype_id ?? undefined })))
+          setFamilies(Array.isArray(fam) ? fam : [])
+          setSubtypes(Array.isArray(sub) ? sub : [])
+        } catch (e) { console.error('Failed to load land use lists', e) }
       })()
     }
   }, [editing])
@@ -311,8 +293,19 @@ const EditableParcelRow: React.FC<{ parcel: Parcel; index: number; onSaved: (p: 
       <td className="px-2 py-1.5 text-gray-300">{parcel.parcel_name}</td>
       <td className="px-2 py-1.5 text-center">
         {editing ? (
-          <div className="flex flex-wrap gap-1 justify-center max-w-[420px]">
-            {codes.map(c => (
+          <div className="flex flex-col items-center gap-1">
+            <div className="flex gap-2">
+              <select className="bg-gray-700 border border-gray-600 rounded px-2 py-1 text-white text-xs" value={selectedFamily} onChange={e => { setSelectedFamily(e.target.value); setSelectedSubtype('') }}>
+                <option value="">All Families</option>
+                {families.map(f => <option key={f.family_id} value={f.family_id}>{f.name}</option>)}
+              </select>
+              <select className="bg-gray-700 border border-gray-600 rounded px-2 py-1 text-white text-xs" value={selectedSubtype} onChange={e => setSelectedSubtype(e.target.value)}>
+                <option value="">All Subtypes</option>
+                {subtypes.filter(st => !selectedFamily || st.family_id === selectedFamily).map(st => <option key={st.subtype_id} value={st.subtype_id}>{st.name}</option>)}
+              </select>
+            </div>
+            <div className="flex flex-wrap gap-1 justify-center max-w-[520px]">
+            {codes.filter(c => (!selectedFamily || c.family_id === selectedFamily) && (!selectedSubtype || c.subtype_id === selectedSubtype)).map(c => (
               <button key={c.landuse_code}
                 type="button"
                 className={`px-2 py-0.5 rounded-full text-xs border ${draft.usecode === c.landuse_code ? 'bg-blue-700 border-blue-600 text-white' : 'bg-gray-700 border-gray-600 text-gray-200'}`}
@@ -322,6 +315,7 @@ const EditableParcelRow: React.FC<{ parcel: Parcel; index: number; onSaved: (p: 
                 {c.landuse_code}
               </button>
             ))}
+            </div>
           </div>
         ) : (
           <span className={`px-1.5 py-0.5 rounded text-xs font-medium ${
@@ -380,3 +374,49 @@ const EditableParcelRow: React.FC<{ parcel: Parcel; index: number; onSaved: (p: 
 }
 
 export default PlanningContent;
+
+// Inline-edit for phase label/description (persist via PATCH)
+const PhaseRow: React.FC<{ phase: Phase; index: number }> = ({ phase, index }) => {
+  const [editing, setEditing] = useState(false)
+  const [label, setLabel] = useState('')
+  const [description, setDescription] = useState('')
+  const [saving, setSaving] = useState(false)
+
+  useEffect(() => {
+    // no-op defaults; label/description come from DB if/when added to GET
+  }, [])
+
+  const save = async () => {
+    setSaving(true)
+    try {
+      await fetch(`/api/phases/${phase.phase_id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ label, description }) })
+      // Broadcast to other views (wizard) to refresh if needed
+      try { window.dispatchEvent(new CustomEvent('dataChanged', { detail: { entity: 'phase', id: phase.phase_id } })) } catch {}
+      setEditing(false)
+    } catch (e) { console.error('Phase save failed', e) } finally { setSaving(false) }
+  }
+
+  return (
+    <tr className={`border-b border-gray-700 hover:bg-gray-700 ${index % 2 === 0 ? 'bg-gray-800' : 'bg-gray-850'}`}>
+      <td className="py-2 px-2 text-gray-300">
+        {phase.phase_name}
+        {label && <span className="ml-2 text-xs text-gray-400">— {label}</span>}
+      </td>
+      <td className="py-2 px-2 text-center text-gray-300">{new Intl.NumberFormat('en-US', { minimumFractionDigits: 1, maximumFractionDigits: 1 }).format(phase.gross_acres)}</td>
+      <td className="py-2 px-2 text-center text-gray-300">{new Intl.NumberFormat('en-US', { minimumFractionDigits: 1, maximumFractionDigits: 1 }).format(phase.net_acres)}</td>
+      <td className="py-2 px-2 text-center text-gray-300">{phase.units_total}</td>
+      <td className="py-2 px-2 text-center">
+        {editing ? (
+          <div className="flex items-center gap-2 justify-center">
+            <input className="bg-gray-700 border border-gray-600 rounded px-2 py-1 text-white text-xs w-28" placeholder="Label" value={label} onChange={e => setLabel(e.target.value)} />
+            <input className="bg-gray-700 border border-gray-600 rounded px-2 py-1 text-white text-xs w-40" placeholder="Description" value={description} onChange={e => setDescription(e.target.value)} />
+            <button className="px-2 py-1 text-xs bg-blue-700 text-white rounded" onClick={save} disabled={saving}>{saving ? 'Saving…' : 'Save'}</button>
+            <button className="px-2 py-1 text-xs bg-gray-700 text-gray-200 rounded" onClick={() => setEditing(false)}>Cancel</button>
+          </div>
+        ) : (
+          <button className="px-2 py-1 text-xs bg-gray-700 text-gray-300 rounded hover:bg-gray-600" onClick={() => setEditing(true)}>Edit</button>
+        )}
+      </td>
+    </tr>
+  )
+}
