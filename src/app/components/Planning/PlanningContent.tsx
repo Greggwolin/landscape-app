@@ -99,7 +99,11 @@ const PlanningContent: React.FC = () => {
           </div>
           <div className="p-4">
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-              {[1, 2, 3, 4].map(areaNo => {
+              {(() => {
+                const distinctAreas = Array.from(new Set(parcels.map(p => p.area_no))).sort((a, b) => a - b)
+                const list = distinctAreas.length > 0 ? distinctAreas : [1, 2, 3, 4]
+                return list
+              })().map(areaNo => {
                 const stats = getAreaStats(areaNo);
                 return (
                   <div key={areaNo} className="bg-gray-700 rounded p-3 border border-gray-600">
