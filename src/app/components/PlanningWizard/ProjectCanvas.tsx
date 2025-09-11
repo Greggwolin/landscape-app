@@ -85,9 +85,9 @@ const ProjectCanvas: React.FC<ProjectCanvasProps> = ({
           
           {/* Canvas Area */}
           <div className="p-6 h-full">
-            <div className="grid grid-cols-2 gap-8">
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 xl:gap-8">
                 {project.areas.map((area) => (
-                  <div key={area.id} className="min-h-200">
+                  <div key={area.id} className="min-h-[520px]">
                     <DropZone
                       accepts={['phase']}
                       onDrop={handlePhaseDrop(area.id)}
@@ -149,7 +149,7 @@ const ProjectCanvas: React.FC<ProjectCanvasProps> = ({
                                 </div>
                                 {phase.parcels.length > 0 && (
                                   <div className="grid grid-cols-3 gap-1">
-                                    {phase.parcels.slice(0, 3).map((parcel) => (
+                                    {phase.parcels.map((parcel) => (
                                       <div
                                         key={parcel.id}
                                         className={`${getLandUseColor(parcel.landUse)} ${getLandUseBorderColor(parcel.landUse)} text-white rounded text-xs p-1.5 cursor-pointer border hover:outline hover:outline-2 transition-all duration-200`}
@@ -219,14 +219,7 @@ const ProjectCanvas: React.FC<ProjectCanvasProps> = ({
                                         </table>
                                       </div>
                                     ))}
-                                    {phase.parcels.length > 3 && (
-                                      <div className="bg-gray-600 border border-gray-500 text-gray-200 rounded text-xs p-1.5 flex items-center justify-center">
-                                        <div className="text-center">
-                                          <div className="font-medium">+{phase.parcels.length - 3}</div>
-                                          <div className="text-xs opacity-80">more</div>
-                                        </div>
-                                      </div>
-                                    )}
+                                    
                                   </div>
                                 )}
                               </div>

@@ -81,14 +81,6 @@ const PlanningContent: React.FC = () => {
     };
   };
 
-  if (loading) {
-    return (
-      <div className="p-4 flex items-center justify-center">
-        <div className="text-gray-400">Loading planning data...</div>
-      </div>
-    );
-  }
-
   // Sidecard state for parcel detail (wizard card embedded on this page)
   const [detailOpen, setDetailOpen] = useState(false)
   const [detailCtx, setDetailCtx] = useState<any>(null)
@@ -115,6 +107,14 @@ const PlanningContent: React.FC = () => {
     }
     setDetailCtx({ parcel, phase, area })
     setDetailOpen(true)
+  }
+
+  if (loading) {
+    return (
+      <div className="p-4 flex items-center justify-center">
+        <div className="text-gray-400">Loading planning data...</div>
+      </div>
+    );
   }
 
   return (

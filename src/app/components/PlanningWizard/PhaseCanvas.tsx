@@ -172,31 +172,31 @@ const PhaseCanvas: React.FC<PhaseCanvasProps> = ({
                             <td className="font-semibold">{parcel.units}</td>
                           </tr>
                         )}
-                        {parcel.frontage && (
+                        {(parcel.frontage ?? 0) > 0 && (
                           <tr>
                             <td className="opacity-90 align-top pr-2">Frontage:</td>
                             <td className="font-semibold">{parcel.frontage} ft</td>
                           </tr>
                         )}
-                        {parcel.product && (
+                        {Boolean(parcel.product) && (
                           <tr>
                             <td className="opacity-90 align-top pr-2">Product:</td>
                             <td className="font-semibold">{parcel.product}</td>
                           </tr>
                         )}
-                        {parcel.status && (
+                        {Boolean(parcel.status) && (
                           <tr>
                             <td className="opacity-90 align-top pr-2">Status:</td>
                             <td className="font-semibold">{parcel.status}</td>
                           </tr>
                         )}
-                        {parcel.efficiency && (
+                        {(parcel.efficiency ?? 0) > 0 && (
                           <tr>
                             <td className="opacity-90 align-top pr-2">Efficiency:</td>
                             <td className="font-semibold">{(parcel.efficiency * 100).toFixed(0)}%</td>
                           </tr>
                         )}
-                        {parcel.density_gross && (
+                        {(parcel.density_gross ?? 0) > 0 && (
                           <tr>
                             <td className="opacity-90 align-top pr-2">Density:</td>
                             <td className="font-semibold">{parcel.density_gross.toFixed(1)} u/ac</td>
