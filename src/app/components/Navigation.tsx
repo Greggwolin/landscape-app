@@ -70,7 +70,8 @@ const Navigation: React.FC<NavigationProps> = ({ activeView, setActiveView }) =>
     {
       title: 'Settings',
       items: [
-        { id: 'settings', label: 'Settings', icon: '⚙️' }
+        { id: 'settings', label: 'Settings', icon: '⚙️' },
+        { id: 'zoning-glossary', label: 'Zoning Glossary', icon: '🏷️' }
       ]
     }
   ];

@@ -41,3 +41,12 @@ yarn-error.log*
 next-env.d.ts
 
 /src/generated/prisma
+
+# Large files and local development files
+*.zip
+*.tar.gz
+*.sql
+/LocalFiles/
+/.vscode/
+*.psd
+*.DS_Store

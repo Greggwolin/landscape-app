@@ -2,6 +2,11 @@ import { NextResponse } from 'next/server'
 import { sql } from '../../../../lib/db'
 
 export async function POST() {
+  // Environment guard - prevent seeding in production
+  if (process.env.NODE_ENV === 'production') {
+    return NextResponse.json({ error: 'Seed endpoints disabled in production' }, { status: 403 });
+  }
+
   try {
     // Seed UOMs (idempotent)
     const uoms = [

@@ -10,6 +10,7 @@ import PlanningContent from './components/Planning/PlanningContent';
 import PlanningWizard from './components/PlanningWizard/PlanningWizard';
 import CategoryTree from './components/Admin/CategoryTree';
 import LandUseSchema from './components/LandUse/LandUseSchema';
+import ZoningGlossaryAdmin from './components/Glossary/ZoningGlossaryAdmin';
 
 interface Project {
   project_id: number;
@@ -98,6 +99,8 @@ const LandscapeApp: React.FC = () => {
       // Settings
       case 'settings':
         return <CategoryTree />;
+      case 'zoning-glossary':
+        return <ZoningGlossaryAdmin />;
       
       default:
         return <ComingSoonContent title={activeView.charAt(0).toUpperCase() + activeView.slice(1)} />;

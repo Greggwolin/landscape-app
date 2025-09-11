@@ -1,6 +1,38 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { ExcelReader } from '@/lib/excel-reader';
+import { ExcelReader, ExcelSheet } from '@/lib/excel-reader';
 import path from 'path';
+
+// Security: Validate and sanitize file paths
+function validateAndSanitizeFilePath(filename: string): string | null {
+  // Reject null, empty, or non-string inputs
+  if (!filename || typeof filename !== 'string') {
+    return null;
+  }
+  
+  // Remove any path traversal attempts
+  const sanitized = filename.replace(/\.\./g, '');
+  
+  // Only allow specific file extensions
+  const allowedExtensions = ['.xlsx', '.xlsm', '.xls'];
+  const hasValidExtension = allowedExtensions.some(ext => 
+    sanitized.toLowerCase().endsWith(ext)
+  );
+  
+  if (!hasValidExtension) {
+    return null;
+  }
+  
+  // Resolve base directory and target path
+  const baseDir = path.resolve(process.cwd(), 'LocalFiles');
+  const targetPath = path.resolve(baseDir, sanitized);
+  
+  // Ensure the target path is within the base directory
+  if (!targetPath.startsWith(baseDir)) {
+    return null;
+  }
+  
+  return targetPath;
+}
 
 export async function GET(request: NextRequest) {
   try {
@@ -14,8 +46,13 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Filename is required' }, { status: 400 });
     }
     
-    // Construct file path - assuming files are in LocalFiles directory
-    const filePath = path.join(process.cwd(), 'LocalFiles', filename);
+    // Validate and sanitize file path to prevent path traversal
+    const filePath = validateAndSanitizeFilePath(filename);
+    if (!filePath) {
+      return NextResponse.json({ 
+        error: 'Invalid filename. Only .xlsx, .xlsm, and .xls files are allowed.' 
+      }, { status: 400 });
+    }
     
     switch (action) {
       case 'info':
@@ -102,8 +139,19 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Filename is required' }, { status: 400 });
     }
     
-    const filePath = path.join(process.cwd(), 'LocalFiles', filename);
-    const results: any = {};
+    // Validate and sanitize file path to prevent path traversal
+    const filePath = validateAndSanitizeFilePath(filename);
+    if (!filePath) {
+      return NextResponse.json({ 
+        error: 'Invalid filename. Only .xlsx, .xlsm, and .xls files are allowed.' 
+      }, { status: 400 });
+    }
+    const results: {
+      info?: ReturnType<typeof ExcelReader.getWorkbookInfo>
+      sheets?: Record<string, ExcelSheet>
+      formulas?: { total: number; formulas: Array<{ sheet: string; cell: string; formula: string; value: unknown }> }
+      search?: { term: string; total: number; results: Array<{ sheet: string; row: number; col: number; value: unknown }> }
+    } = {}
     
     // Get workbook info
     results.info = ExcelReader.getWorkbookInfo(filePath);

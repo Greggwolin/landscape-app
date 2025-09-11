@@ -10,6 +10,7 @@
     "lint:fix": "eslint --fix",
     "test": "echo \"No tests configured yet\" && exit 0",
     "schema:md": "node scripts/generate-schema-md.mjs",
+    "db:validate:glossary": "node scripts/validate-glossary-zoning.mjs",
     "prepare": "husky install"
   },
   "dependencies": {

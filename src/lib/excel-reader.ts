@@ -4,8 +4,8 @@ import path from 'path';
 
 export interface ExcelSheet {
   name: string;
-  data: any[][];
-  json: Record<string, any>[];
+  data: unknown[][];
+  json: Record<string, unknown>[];
 }
 
 export interface ExcelWorkbook {
@@ -37,13 +37,13 @@ export class ExcelReader {
           header: 1,
           defval: null,
           blankrows: false
-        }) as any[][];
+        }) as unknown[][];
         
         // Convert to JSON with headers as keys
         const json = XLSX.utils.sheet_to_json(worksheet, {
           defval: null,
           blankrows: false
-        }) as Record<string, any>[];
+        }) as Record<string, unknown>[];
         
         sheets.push({
           name: sheetName,
@@ -74,7 +74,7 @@ export class ExcelReader {
    * Get cell value with formula information
    */
   static getCellWithFormula(filePath: string, sheetName: string, cellAddress: string): {
-    value: any;
+    value: unknown;
     formula?: string;
     type?: string;
   } {
@@ -110,13 +110,13 @@ export class ExcelReader {
     sheet: string;
     row: number;
     col: number;
-    value: any;
+    value: unknown;
   }> {
     const results: Array<{
       sheet: string;
       row: number;
       col: number;
-      value: any;
+      value: unknown;
     }> = [];
     
     const search = caseSensitive ? searchText : searchText.toLowerCase();
@@ -149,7 +149,7 @@ export class ExcelReader {
     sheet: string;
     cell: string;
     formula: string;
-    value: any;
+    value: unknown;
   }> {
     try {
       const buffer = readFileSync(filePath);
@@ -159,7 +159,7 @@ export class ExcelReader {
         sheet: string;
         cell: string;
         formula: string;
-        value: any;
+        value: unknown;
       }> = [];
       
       workbook.SheetNames.forEach(sheetName => {
