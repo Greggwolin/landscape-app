@@ -191,30 +191,9 @@ const PlanningContent: React.FC = () => {
             </thead>
             <tbody>
               {parcels.map((parcel, index) => (
-                <tr key={parcel.parcel_id} className={`border-b border-gray-700 hover:bg-gray-700 ${index % 2 === 0 ? 'bg-gray-800' : 'bg-gray-850'}`}>
-                  <td className="px-2 py-1.5 text-gray-300">{parcel.area_no}</td>
-                  <td className="px-2 py-1.5 text-gray-300">{parcel.phase_name}</td>
-                  <td className="px-2 py-1.5 text-gray-300">{parcel.parcel_name}</td>
-                  <td className="px-2 py-1.5 text-center">
-                    <span className={`px-1.5 py-0.5 rounded text-xs font-medium ${
-                      parcel.usecode === 'SF' ? 'bg-blue-900 text-blue-300' :
-                      parcel.usecode === 'MF' ? 'bg-purple-900 text-purple-300' :
-                      parcel.usecode === 'RET' ? 'bg-orange-900 text-orange-300' :
-                      'bg-indigo-900 text-indigo-300'
-                    }`}>
-                      {parcel.usecode}
-                    </span>
-                  </td>
-                  <td className="px-2 py-1.5 text-center text-gray-300">{parcel.product}</td>
-                  <td className="px-2 py-1.5 text-center text-gray-300">{formatNumber(parcel.acres)}</td>
-                  <td className="px-2 py-1.5 text-center text-gray-300">{formatNumber(parcel.units)}</td>
-                  <td className="px-2 py-1.5 text-center text-gray-300">{(parcel.efficiency * 100).toFixed(0)}%</td>
-                  <td className="px-2 py-1.5 text-center">
-                    <button className="px-1.5 py-0.5 text-xs bg-gray-700 text-gray-300 rounded hover:bg-gray-600">
-                      Edit
-                    </button>
-                  </td>
-                </tr>
+                <EditableParcelRow key={parcel.parcel_id} parcel={parcel} index={index}
+                  onSaved={(updated) => setParcels(prev => prev.map(p => p.parcel_id === updated.parcel_id ? { ...p, ...updated } : p))}
+                />
               ))}
             </tbody>
           </table>
@@ -223,5 +202,111 @@ const PlanningContent: React.FC = () => {
     </div>
   );
 };
+
+// Inline-editable parcel row
+const EditableParcelRow: React.FC<{ parcel: Parcel; index: number; onSaved: (p: Parcel) => void }> = ({ parcel, index, onSaved }) => {
+  const [editing, setEditing] = useState(false)
+  const [draft, setDraft] = useState({
+    usecode: parcel.usecode ?? '',
+    product: parcel.product ?? '',
+    acres: parcel.acres ?? 0,
+    units: parcel.units ?? 0,
+    efficiency: parcel.efficiency ?? 0,
+    frontfeet: (parcel as any).frontfeet ?? 0,
+  })
+
+  const save = async () => {
+    try {
+      const res = await fetch(`/api/parcels/${parcel.parcel_id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          usecode: draft.usecode,
+          product: draft.product,
+          acres: Number(draft.acres),
+          units: Number(draft.units),
+          efficiency: Number(draft.efficiency),
+          frontfeet: Number(draft.frontfeet),
+        })
+      })
+      if (!res.ok) throw new Error(await res.text())
+      onSaved({ ...parcel, ...draft, acres: Number(draft.acres), units: Number(draft.units), efficiency: Number(draft.efficiency) } as Parcel)
+      setEditing(false)
+    } catch (e) {
+      console.error('Save parcel failed', e)
+      alert('Failed to save parcel')
+    }
+  }
+
+  return (
+    <tr className={`border-b border-gray-700 hover:bg-gray-700 ${index % 2 === 0 ? 'bg-gray-800' : 'bg-gray-850'}`}>
+      <td className="px-2 py-1.5 text-gray-300">{parcel.area_no}</td>
+      <td className="px-2 py-1.5 text-gray-300">{parcel.phase_name}</td>
+      <td className="px-2 py-1.5 text-gray-300">{parcel.parcel_name}</td>
+      <td className="px-2 py-1.5 text-center">
+        {editing ? (
+          <input className="w-20 bg-gray-700 border border-gray-600 rounded px-2 py-1 text-white text-center"
+            value={draft.usecode} onChange={e => setDraft(d => ({ ...d, usecode: e.target.value }))}
+          />
+        ) : (
+          <span className={`px-1.5 py-0.5 rounded text-xs font-medium ${
+            parcel.usecode === 'SF' ? 'bg-blue-900 text-blue-300' :
+            parcel.usecode === 'MF' ? 'bg-purple-900 text-purple-300' :
+            parcel.usecode === 'RET' ? 'bg-orange-900 text-orange-300' :
+            'bg-indigo-900 text-indigo-300'
+          }`}>
+            {parcel.usecode}
+          </span>
+        )}
+      </td>
+      <td className="px-2 py-1.5 text-center text-gray-300">
+        {editing ? (
+          <input className="w-28 bg-gray-700 border border-gray-600 rounded px-2 py-1 text-white text-center"
+            value={draft.product} onChange={e => setDraft(d => ({ ...d, product: e.target.value }))}
+          />
+        ) : (
+          parcel.product
+        )}
+      </td>
+      <td className="px-2 py-1.5 text-center text-gray-300">
+        {editing ? (
+          <input className="w-20 bg-gray-700 border border-gray-600 rounded px-2 py-1 text-white text-center" inputMode="decimal"
+            value={draft.acres} onChange={e => setDraft(d => ({ ...d, acres: e.target.value === '' ? 0 : Number(e.target.value) }))}
+          />
+        ) : (
+          new Intl.NumberFormat('en-US', { minimumFractionDigits: 1, maximumFractionDigits: 1 }).format(parcel.acres)
+        )}
+      </td>
+      <td className="px-2 py-1.5 text-center text-gray-300">
+        {editing ? (
+          <input className="w-20 bg-gray-700 border border-gray-600 rounded px-2 py-1 text-white text-center" inputMode="decimal"
+            value={draft.units} onChange={e => setDraft(d => ({ ...d, units: e.target.value === '' ? 0 : Number(e.target.value) }))}
+          />
+        ) : (
+          new Intl.NumberFormat('en-US', { minimumFractionDigits: 1, maximumFractionDigits: 1 }).format(parcel.units)
+        )}
+      </td>
+      <td className="px-2 py-1.5 text-center text-gray-300">
+        {editing ? (
+          <input className="w-20 bg-gray-700 border border-gray-600 rounded px-2 py-1 text-white text-center" inputMode="decimal"
+            value={draft.efficiency} onChange={e => setDraft(d => ({ ...d, efficiency: e.target.value === '' ? 0 : Number(e.target.value) }))}
+          />
+        ) : (
+          (parcel.efficiency * 100).toFixed(0) + '%'
+        )}
+      </td>
+      <td className="px-2 py-1.5 text-center">
+        {editing ? (
+          <div className="flex items-center gap-2 justify-center">
+            <button className="px-1.5 py-0.5 text-xs bg-blue-700 text-white rounded" onClick={save}>Save</button>
+            <button className="px-1.5 py-0.5 text-xs bg-gray-700 text-gray-200 rounded" onClick={() => { setEditing(false); setDraft({ usecode: parcel.usecode, product: parcel.product, acres: parcel.acres, units: parcel.units, efficiency: parcel.efficiency, frontfeet: (parcel as any).frontfeet ?? 0 }) }}>Cancel</button>
+          </div>
+        ) : (
+          <button className="px-1.5 py-0.5 text-xs bg-gray-700 text-gray-300 rounded hover:bg-gray-600" onClick={() => setEditing(true)}>Edit</button>
+        )}
+      </td>
+    </tr>
+  )
+}
 
 export default PlanningContent;
