@@ -30,6 +30,7 @@ export interface Parcel {
   status?: string
   description?: string
   notes?: string
+  dbId?: number
 }
 
 export interface Phase {
@@ -131,6 +132,83 @@ const PlanningWizard: React.FC = () => {
       }
     }
   }, [project])
+
+  // Hydrate from Neon (areas, phases, parcels)
+  useEffect(() => {
+    (async () => {
+      try {
+        const projRes = await fetch('/api/projects', { cache: 'no-store' })
+        const projects = await projRes.json().catch(() => [])
+        const projectId = Array.isArray(projects) && projects[0]?.project_id ? Number(projects[0].project_id) : null
+        if (!projectId) return
+        const [parcelsRes, phasesRes] = await Promise.all([
+          fetch(`/api/parcels?project_id=${projectId}`, { cache: 'no-store' }),
+          fetch(`/api/phases?project_id=${projectId}`, { cache: 'no-store' })
+        ])
+        const parcels = await parcelsRes.json().catch(() => [])
+        const phases = await phasesRes.json().catch(() => [])
+
+        // Build areas -> phases -> parcels
+        const areasMap = new Map<number, Area>()
+        for (const ph of phases) {
+          const areaNo = Number(ph.area_no)
+          const phaseNo = Number(ph.phase_no)
+          const areaId = `area-${areaNo}`
+          const phaseId = `phase-${areaNo}-${phaseNo}`
+          if (!areasMap.has(areaNo)) {
+            areasMap.set(areaNo, { id: areaId, name: `Area ${areaNo}`, phases: [], saved: true })
+          }
+          const areaRef = areasMap.get(areaNo)!
+          if (!areaRef.phases.find(p => p.id === phaseId)) {
+            areaRef.phases.push({ id: phaseId, name: `Phase ${areaNo}.${phaseNo}`, parcels: [], saved: true })
+          }
+        }
+        for (const pr of parcels) {
+          const areaNo = Number(pr.area_no)
+          const phaseName = String(pr.phase_name)
+          const [aStr, pStr] = phaseName.split('.')
+          const phaseNo = Number(pStr)
+          const areaId = `area-${areaNo}`
+          const phaseId = `phase-${areaNo}-${phaseNo}`
+          const areaRef = areasMap.get(areaNo)
+          if (!areaRef) continue
+          const phaseRef = areaRef.phases.find(p => p.id === phaseId)
+          if (!phaseRef) continue
+          const lu: LandUseType = (['MDR','HDR','LDR','MHDR','C','MU','OS'] as LandUseType[]).includes(pr.usecode) ? pr.usecode : 'MDR'
+          const parcel: Parcel = {
+            id: `parcel-db-${pr.parcel_id}`,
+            name: `Parcel: ${pr.parcel_name}`,
+            landUse: lu,
+            acres: Number(pr.acres ?? 0),
+            units: Number(pr.units ?? 0),
+            product: pr.product ?? undefined,
+            efficiency: Number(pr.efficiency ?? 0),
+            dbId: Number(pr.parcel_id)
+          }
+          phaseRef.parcels.push(parcel)
+        }
+        const areas = Array.from(areasMap.values()).sort((a, b) => Number(a.id.split('-')[1]) - Number(b.id.split('-')[1]))
+        setProject({ id: `project-${projectId}`, name: projects[0]?.project_name ?? `Project ${projectId}`, areas })
+
+        // If asked to open a parcel from Overview, do it now
+        const openId = typeof window !== 'undefined' ? localStorage.getItem('planningWizard-open-parcel-id') : null
+        if (openId) {
+          for (const a of areas) {
+            for (const ph of a.phases) {
+              const match = ph.parcels.find(px => px.dbId && String(px.dbId) === openId)
+              if (match) {
+                openParcelDetail(a.id, ph.id, match.id)
+                break
+              }
+            }
+          }
+          try { localStorage.removeItem('planningWizard-open-parcel-id') } catch {}
+        }
+      } catch (e) {
+        console.error('Wizard hydration failed', e)
+      }
+    })()
+  }, [])
 
   // Utility function to clear saved data (useful for testing)
   const clearSavedData = useCallback(() => {
@@ -356,6 +434,23 @@ const PlanningWizard: React.FC = () => {
           : area
       )
     }))
+    // Persist to Neon when possible
+    try {
+      const a = project.areas.find(a => a.id === areaId)
+      const ph = a?.phases.find(p => p.id === phaseId)
+      const pr = ph?.parcels.find(px => px.id === parcelId)
+      if (pr?.dbId) {
+        fetch(`/api/parcels/${pr.dbId}`, {
+          method: 'PATCH', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            usecode: updates.landUse,
+            acres: updates.acres,
+            units: updates.units,
+            product: pr.product ?? null
+          })
+        }).catch(() => {})
+      }
+    } catch {}
   }, [])
 
   const openParcelDetail = useCallback((areaId: string, phaseId: string, parcelId: string) => {

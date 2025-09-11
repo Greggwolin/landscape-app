@@ -28,6 +28,17 @@ const LandscapeApp: React.FC = () => {
     fetchProjectData();
   }, []);
 
+  // Listen for cross-component navigation requests (e.g., open Planning from Overview)
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const ce = e as CustomEvent<{ view?: string }>
+      const v = ce?.detail?.view
+      if (typeof v === 'string') setActiveView(v)
+    }
+    window.addEventListener('navigateToView', handler as EventListener)
+    return () => window.removeEventListener('navigateToView', handler as EventListener)
+  }, [])
+
   const fetchProjectData = async (projectId?: number) => {
     try {
       const response = await fetch('/api/projects');

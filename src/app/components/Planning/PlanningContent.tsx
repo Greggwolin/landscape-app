@@ -130,35 +130,25 @@ const PlanningContent: React.FC = () => {
           </div>
           <div className="p-4">
             <div className="overflow-x-auto">
-              <table className="w-full text-xs">
+              <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b border-gray-600">
                     <th className="text-left py-2 text-gray-300 font-medium">Phase</th>
                     <th className="text-center py-2 text-gray-300 font-medium">Gross Acres</th>
                     <th className="text-center py-2 text-gray-300 font-medium">Net Acres</th>
                     <th className="text-center py-2 text-gray-300 font-medium">Units</th>
-                    <th className="text-center py-2 text-gray-300 font-medium">Start Date</th>
-                    <th className="text-center py-2 text-gray-300 font-medium">Status</th>
                     <th className="text-center py-2 text-gray-300 font-medium">Actions</th>
                   </tr>
                 </thead>
                 <tbody>
                   {phases.map((phase, index) => (
                     <tr key={phase.phase_id} className={`border-b border-gray-700 hover:bg-gray-700 ${index % 2 === 0 ? 'bg-gray-800' : 'bg-gray-850'}`}>
-                  <td className="py-2 px-2 text-gray-300">{phase.phase_name}</td>
+                      <td className="py-2 px-2 text-gray-300">{phase.phase_name}</td>
                       <td className="py-2 px-2 text-center text-gray-300">{formatNumber(phase.gross_acres)}</td>
                       <td className="py-2 px-2 text-center text-gray-300">{formatNumber(phase.net_acres)}</td>
                       <td className="py-2 px-2 text-center text-gray-300">{phase.units_total}</td>
-                      <td className="py-2 px-2 text-center text-gray-300">{phase.start_date || '-'}</td>
                       <td className="py-2 px-2 text-center">
-                        <span className="px-2 py-1 rounded text-xs bg-green-900 text-green-300">
-                          {phase.status}
-                        </span>
-                      </td>
-                      <td className="py-2 px-2 text-center">
-                        <button className="px-2 py-1 text-xs bg-gray-700 text-gray-300 rounded hover:bg-gray-600">
-                          Edit
-                        </button>
+                        <button className="px-2 py-1 text-xs bg-gray-700 text-gray-300 rounded hover:bg-gray-600">Edit</button>
                       </td>
                     </tr>
                   ))}
@@ -175,7 +165,7 @@ const PlanningContent: React.FC = () => {
           <h3 className="text-lg font-semibold text-white">Parcel Detail</h3>
         </div>
         <div className="overflow-x-auto">
-          <table className="w-full text-xs">
+          <table className="w-full text-sm">
             <thead className="bg-gray-900">
               <tr>
                 <th className="text-left px-2 py-2 font-medium text-gray-300">Area</th>
@@ -206,6 +196,7 @@ const PlanningContent: React.FC = () => {
 // Inline-editable parcel row
 const EditableParcelRow: React.FC<{ parcel: Parcel; index: number; onSaved: (p: Parcel) => void }> = ({ parcel, index, onSaved }) => {
   const [editing, setEditing] = useState(false)
+  const [codes, setCodes] = useState<{ landuse_code: string; name: string }[]>([])
   const [draft, setDraft] = useState({
     usecode: parcel.usecode ?? '',
     product: parcel.product ?? '',
@@ -214,6 +205,19 @@ const EditableParcelRow: React.FC<{ parcel: Parcel; index: number; onSaved: (p: 
     efficiency: parcel.efficiency ?? 0,
     frontfeet: (parcel as any).frontfeet ?? 0,
   })
+
+  useEffect(() => {
+    if (editing) {
+      ;(async () => {
+        try {
+          const res = await fetch('/api/landuse/codes')
+          const data = await res.json()
+          const list = Array.isArray(data) ? data : []
+          setCodes(list.map((r: any) => ({ landuse_code: r.landuse_code, name: r.name ?? r.landuse_code })))
+        } catch (e) { console.error('Failed to load land use codes', e) }
+      })()
+    }
+  }, [editing])
 
   const save = async () => {
     try {
@@ -245,9 +249,18 @@ const EditableParcelRow: React.FC<{ parcel: Parcel; index: number; onSaved: (p: 
       <td className="px-2 py-1.5 text-gray-300">{parcel.parcel_name}</td>
       <td className="px-2 py-1.5 text-center">
         {editing ? (
-          <input className="w-20 bg-gray-700 border border-gray-600 rounded px-2 py-1 text-white text-center"
-            value={draft.usecode} onChange={e => setDraft(d => ({ ...d, usecode: e.target.value }))}
-          />
+          <div className="flex flex-wrap gap-1 justify-center max-w-[420px]">
+            {codes.map(c => (
+              <button key={c.landuse_code}
+                type="button"
+                className={`px-2 py-0.5 rounded-full text-xs border ${draft.usecode === c.landuse_code ? 'bg-blue-700 border-blue-600 text-white' : 'bg-gray-700 border-gray-600 text-gray-200'}`}
+                onClick={() => setDraft(d => ({ ...d, usecode: c.landuse_code }))}
+                title={c.name}
+              >
+                {c.landuse_code}
+              </button>
+            ))}
+          </div>
         ) : (
           <span className={`px-1.5 py-0.5 rounded text-xs font-medium ${
             parcel.usecode === 'SF' ? 'bg-blue-900 text-blue-300' :
@@ -286,15 +299,7 @@ const EditableParcelRow: React.FC<{ parcel: Parcel; index: number; onSaved: (p: 
           new Intl.NumberFormat('en-US', { minimumFractionDigits: 1, maximumFractionDigits: 1 }).format(parcel.units)
         )}
       </td>
-      <td className="px-2 py-1.5 text-center text-gray-300">
-        {editing ? (
-          <input className="w-20 bg-gray-700 border border-gray-600 rounded px-2 py-1 text-white text-center" inputMode="decimal"
-            value={draft.efficiency} onChange={e => setDraft(d => ({ ...d, efficiency: e.target.value === '' ? 0 : Number(e.target.value) }))}
-          />
-        ) : (
-          (parcel.efficiency * 100).toFixed(0) + '%'
-        )}
-      </td>
+      <td className="px-2 py-1.5 text-center text-gray-300">{(parcel.efficiency * 100).toFixed(0)}%</td>
       <td className="px-2 py-1.5 text-center">
         {editing ? (
           <div className="flex items-center gap-2 justify-center">
@@ -302,7 +307,16 @@ const EditableParcelRow: React.FC<{ parcel: Parcel; index: number; onSaved: (p: 
             <button className="px-1.5 py-0.5 text-xs bg-gray-700 text-gray-200 rounded" onClick={() => { setEditing(false); setDraft({ usecode: parcel.usecode, product: parcel.product, acres: parcel.acres, units: parcel.units, efficiency: parcel.efficiency, frontfeet: (parcel as any).frontfeet ?? 0 }) }}>Cancel</button>
           </div>
         ) : (
-          <button className="px-1.5 py-0.5 text-xs bg-gray-700 text-gray-300 rounded hover:bg-gray-600" onClick={() => setEditing(true)}>Edit</button>
+          <div className="flex items-center gap-2 justify-center">
+            <button className="px-1.5 py-0.5 text-xs bg-gray-700 text-gray-300 rounded hover:bg-gray-600" onClick={() => setEditing(true)}>Edit</button>
+            <button className="px-1.5 py-0.5 text-xs bg-indigo-700 text-white rounded hover:bg-indigo-600" onClick={() => {
+              try {
+                localStorage.setItem('planningWizard-open-parcel-id', String(parcel.parcel_id))
+              } catch {}
+              const ev = new CustomEvent('navigateToView', { detail: { view: 'planning' } })
+              window.dispatchEvent(ev)
+            }}>Detail</button>
+          </div>
         )}
       </td>
     </tr>
