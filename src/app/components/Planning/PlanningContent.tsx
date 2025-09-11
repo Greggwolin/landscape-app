@@ -1,5 +1,6 @@
 // app/components/Planning/PlanningContent.tsx
 import React, { useState, useEffect } from 'react';
+import ParcelDetailCard from '../PlanningWizard/cards/ParcelDetailCard'
 
 interface Parcel {
   parcel_id: number;
@@ -88,6 +89,34 @@ const PlanningContent: React.FC = () => {
     );
   }
 
+  // Sidecard state for parcel detail (wizard card embedded on this page)
+  const [detailOpen, setDetailOpen] = useState(false)
+  const [detailCtx, setDetailCtx] = useState<any>(null)
+
+  const openDetailForParcel = (p: Parcel) => {
+    // Map Overview parcel to Wizard types (minimal fields used by card)
+    const [aStr, pStr] = String(p.phase_name).split('.')
+    const areaNo = Number(p.area_no)
+    const phaseNo = Number(pStr)
+    const area = { id: `area-${areaNo}`, name: `Area ${areaNo}`, phases: [], saved: true }
+    const phase = { id: `phase-${areaNo}-${phaseNo}`, name: `Phase ${areaNo}.${phaseNo}`, parcels: [], saved: true }
+    const landUseOptions = ['MDR','HDR','LDR','MHDR','C','MU','OS'] as const
+    const landUse = (landUseOptions as readonly string[]).includes(p.usecode) ? (p.usecode as any) : 'MDR'
+    const parcel = {
+      id: `parcel-db-${p.parcel_id}`,
+      name: `Parcel: ${p.parcel_name}`,
+      landUse,
+      acres: Number(p.acres ?? 0),
+      units: Number(p.units ?? 0),
+      product: p.product ?? '',
+      efficiency: Number(p.efficiency ?? 0),
+      frontage: (p as any).frontfeet ?? 0,
+      dbId: p.parcel_id,
+    }
+    setDetailCtx({ parcel, phase, area })
+    setDetailOpen(true)
+  }
+
   return (
     <div className="p-4 space-y-4 bg-gray-950 min-h-screen">
       {/* Areas and Development Phasing Row */}
@@ -164,7 +193,8 @@ const PlanningContent: React.FC = () => {
         <div className="px-4 py-3 border-b border-gray-700">
           <h3 className="text-lg font-semibold text-white">Parcel Detail</h3>
         </div>
-        <div className="overflow-x-auto">
+        <div className={detailOpen ? 'p-2 grid grid-cols-3 gap-4' : 'overflow-x-auto'}>
+          <div className={detailOpen ? 'col-span-2 overflow-x-auto' : ''}>
           <table className="w-full text-sm">
             <thead className="bg-gray-900">
               <tr>
@@ -183,10 +213,42 @@ const PlanningContent: React.FC = () => {
               {parcels.map((parcel, index) => (
                 <EditableParcelRow key={parcel.parcel_id} parcel={parcel} index={index}
                   onSaved={(updated) => setParcels(prev => prev.map(p => p.parcel_id === updated.parcel_id ? { ...p, ...updated } : p))}
+                  onOpenDetail={() => openDetailForParcel(parcel)}
                 />
               ))}
             </tbody>
           </table>
+          </div>
+          {detailOpen && detailCtx && (
+            <div className="col-span-1">
+              <ParcelDetailCard
+                parcel={detailCtx.parcel}
+                phase={detailCtx.phase}
+                area={detailCtx.area}
+                isOpen={true}
+                onSave={async (_areaId, _phaseId, _parcelId, updates: any) => {
+                  try {
+                    await fetch(`/api/parcels/${detailCtx.parcel.dbId}`, {
+                      method: 'PATCH', headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({
+                        usecode: updates.landUse,
+                        acres: updates.acres,
+                        units: updates.units,
+                        product: updates.product ?? null,
+                        frontfeet: updates.frontage ?? null
+                      })
+                    })
+                    // Refresh row in table
+                    setParcels(prev => prev.map(p => p.parcel_id === detailCtx.parcel.dbId
+                      ? { ...p, usecode: updates.landUse, acres: updates.acres, units: updates.units, product: updates.product ?? p.product }
+                      : p
+                    ))
+                  } catch (e) { console.error('Save via sidecard failed', e) }
+                }}
+                onClose={() => setDetailOpen(false)}
+              />
+            </div>
+          )}
         </div>
       </div>
     </div>
@@ -194,7 +256,7 @@ const PlanningContent: React.FC = () => {
 };
 
 // Inline-editable parcel row
-const EditableParcelRow: React.FC<{ parcel: Parcel; index: number; onSaved: (p: Parcel) => void }> = ({ parcel, index, onSaved }) => {
+const EditableParcelRow: React.FC<{ parcel: Parcel; index: number; onSaved: (p: Parcel) => void; onOpenDetail?: () => void }> = ({ parcel, index, onSaved, onOpenDetail }) => {
   const [editing, setEditing] = useState(false)
   const [codes, setCodes] = useState<{ landuse_code: string; name: string }[]>([])
   const [draft, setDraft] = useState({
@@ -309,13 +371,7 @@ const EditableParcelRow: React.FC<{ parcel: Parcel; index: number; onSaved: (p: 
         ) : (
           <div className="flex items-center gap-2 justify-center">
             <button className="px-1.5 py-0.5 text-xs bg-gray-700 text-gray-300 rounded hover:bg-gray-600" onClick={() => setEditing(true)}>Edit</button>
-            <button className="px-1.5 py-0.5 text-xs bg-indigo-700 text-white rounded hover:bg-indigo-600" onClick={() => {
-              try {
-                localStorage.setItem('planningWizard-open-parcel-id', String(parcel.parcel_id))
-              } catch {}
-              const ev = new CustomEvent('navigateToView', { detail: { view: 'planning' } })
-              window.dispatchEvent(ev)
-            }}>Detail</button>
+            <button className="px-1.5 py-0.5 text-xs bg-indigo-700 text-white rounded hover:bg-indigo-600" onClick={() => onOpenDetail && onOpenDetail()}>Detail</button>
           </div>
         )}
       </td>

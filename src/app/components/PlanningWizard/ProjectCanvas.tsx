@@ -185,7 +185,7 @@ const ProjectCanvas: React.FC<ProjectCanvasProps> = ({
                                                 <td className="font-medium">{parcel.units}</td>
                                               </tr>
                                             )}
-                                            {parcel.frontage && (
+                                            {(parcel.frontage ?? 0) > 0 && (
                                               <tr>
                                                 <td className="opacity-90 align-top pr-1">Frontage:</td>
                                                 <td className="font-medium">{parcel.frontage} ft</td>
@@ -197,19 +197,19 @@ const ProjectCanvas: React.FC<ProjectCanvasProps> = ({
                                                 <td className="font-medium">{parcel.product}</td>
                                               </tr>
                                             )}
-                                            {parcel.status && (
+                                            {Boolean(parcel.status) && (
                                               <tr>
                                                 <td className="opacity-90 align-top pr-1">Status:</td>
                                                 <td className="font-medium">{parcel.status}</td>
                                               </tr>
                                             )}
-                                            {parcel.efficiency && (
+                                            {(parcel.efficiency ?? 0) > 0 && (
                                               <tr>
                                                 <td className="opacity-90 align-top pr-1">Efficiency:</td>
                                                 <td className="font-medium">{(parcel.efficiency * 100).toFixed(0)}%</td>
                                               </tr>
                                             )}
-                                            {parcel.density_gross && (
+                                            {(parcel.density_gross ?? 0) > 0 && (
                                               <tr>
                                                 <td className="opacity-90 align-top pr-1">Density:</td>
                                                 <td className="font-medium">{parcel.density_gross.toFixed(1)} u/ac</td>
