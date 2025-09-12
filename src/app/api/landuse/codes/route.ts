@@ -76,7 +76,8 @@ export async function GET() {
             ORDER BY landuse_code
           `;
         } catch (error3) {
-          console.error('tbl_landuse table issue:', error3.message);
+          const msg = error3 instanceof Error ? error3.message : String(error3)
+          console.error('tbl_landuse table issue:', msg);
           return NextResponse.json([]);
         }
       }
@@ -84,9 +85,10 @@ export async function GET() {
 
     return NextResponse.json(landuses || []);
   } catch (error) {
+    const msg = error instanceof Error ? error.message : String(error)
     console.error('Error fetching land use codes:', error);
     return NextResponse.json(
-      { error: 'Failed to fetch land use codes', details: error.message },
+      { error: 'Failed to fetch land use codes', details: msg },
       { status: 500 }
     );
   }
@@ -120,14 +122,15 @@ export async function POST(request: Request) {
     return NextResponse.json(result[0]);
   } catch (error) {
     console.error('Error creating land use code:', error);
-    if (error.message?.includes('unique')) {
+    const msg = error instanceof Error ? error.message : String(error)
+    if (msg.includes('unique')) {
       return NextResponse.json(
         { error: 'Land use code already exists' },
         { status: 409 }
       );
     }
     return NextResponse.json(
-      { error: 'Failed to create land use code' },
+      { error: 'Failed to create land use code', details: msg },
       { status: 500 }
     );
   }

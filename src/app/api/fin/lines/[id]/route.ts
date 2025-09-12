@@ -1,12 +1,10 @@
 // API: Budget Lines - PATCH update, DELETE remove
-import { NextResponse } from 'next/server'
+import { NextResponse, NextRequest } from 'next/server'
 import { sql } from '../../../../../lib/db'
 
-type Params = { params: { id: string } }
-
-export async function PATCH(_req: Request, context: Params) {
+export async function PATCH(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
-    const id = context.params.id
+    const { id } = await params
     const body = await _req.json().catch(() => ({}))
 
     const category_id = body.category_id ?? null
@@ -41,9 +39,9 @@ export async function PATCH(_req: Request, context: Params) {
   }
 }
 
-export async function DELETE(_req: Request, context: Params) {
+export async function DELETE(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
-    const id = context.params.id
+    const { id } = await params
     await sql`DELETE FROM landscape.core_fin_fact_budget WHERE fact_id = ${id}::bigint`
     return NextResponse.json({ ok: true })
   } catch (e: unknown) {

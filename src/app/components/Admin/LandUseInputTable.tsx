@@ -66,7 +66,7 @@ const SlideOutForm: React.FC<SlideOutProps> = ({
   families = [],
   subtypes = []
 }) => {
-  const [formData, setFormData] = useState<any>({});
+  const [formData, setFormData] = useState<Record<string, unknown>>({});
 
   useEffect(() => {
     if (isOpen) {
@@ -94,7 +94,7 @@ const SlideOutForm: React.FC<SlideOutProps> = ({
               <input
                 type="text"
                 required
-                value={formData.name || ''}
+                value={String((formData as any).name ?? '')}
                 onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
                 className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded text-white focus:ring-2 focus:ring-blue-500"
                 placeholder="e.g., Residential, Commercial"
@@ -105,7 +105,7 @@ const SlideOutForm: React.FC<SlideOutProps> = ({
                 Notes
               </label>
               <textarea
-                value={formData.notes || ''}
+                value={String((formData as any).notes ?? '')}
                 onChange={(e) => setFormData(prev => ({ ...prev, notes: e.target.value }))}
                 className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded text-white focus:ring-2 focus:ring-blue-500"
                 rows={3}
@@ -124,7 +124,7 @@ const SlideOutForm: React.FC<SlideOutProps> = ({
               </label>
               <select
                 required
-                value={formData.family_id || parentId || ''}
+                value={String((formData as any).family_id ?? parentId ?? '')}
                 onChange={(e) => setFormData(prev => ({ ...prev, family_id: parseInt(e.target.value) }))}
                 className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded text-white focus:ring-2 focus:ring-blue-500"
               >
@@ -143,7 +143,7 @@ const SlideOutForm: React.FC<SlideOutProps> = ({
               <input
                 type="text"
                 required
-                value={formData.code || ''}
+                value={String((formData as any).code ?? '')}
                 onChange={(e) => setFormData(prev => ({ ...prev, code: e.target.value.toUpperCase() }))}
                 className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded text-white focus:ring-2 focus:ring-blue-500"
                 placeholder="e.g., LDR, MDR, OFF"
@@ -157,7 +157,7 @@ const SlideOutForm: React.FC<SlideOutProps> = ({
               <input
                 type="text"
                 required
-                value={formData.name || ''}
+                value={String((formData as any).name ?? '')}
                 onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
                 className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded text-white focus:ring-2 focus:ring-blue-500"
                 placeholder="e.g., Low Density Residential"
@@ -168,7 +168,7 @@ const SlideOutForm: React.FC<SlideOutProps> = ({
                 Notes
               </label>
               <textarea
-                value={formData.notes || ''}
+                value={String((formData as any).notes ?? '')}
                 onChange={(e) => setFormData(prev => ({ ...prev, notes: e.target.value }))}
                 className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded text-white focus:ring-2 focus:ring-blue-500"
                 rows={3}
@@ -187,7 +187,7 @@ const SlideOutForm: React.FC<SlideOutProps> = ({
               </label>
               <select
                 required
-                value={formData.subtype_id || parentId || ''}
+                value={String((formData as any).subtype_id ?? parentId ?? '')}
                 onChange={(e) => setFormData(prev => ({ ...prev, subtype_id: parseInt(e.target.value) }))}
                 className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded text-white focus:ring-2 focus:ring-blue-500"
               >
@@ -206,7 +206,7 @@ const SlideOutForm: React.FC<SlideOutProps> = ({
               <input
                 type="text"
                 required
-                value={formData.landuse_code || ''}
+                value={String((formData as any).landuse_code ?? '')}
                 onChange={(e) => setFormData(prev => ({ ...prev, landuse_code: e.target.value.toUpperCase() }))}
                 className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded text-white focus:ring-2 focus:ring-blue-500"
                 placeholder="e.g., SFD, MF, OFF"
@@ -220,7 +220,7 @@ const SlideOutForm: React.FC<SlideOutProps> = ({
               <input
                 type="text"
                 required
-                value={formData.name || ''}
+                value={String((formData as any).name ?? '')}
                 onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
                 className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded text-white focus:ring-2 focus:ring-blue-500"
                 placeholder="e.g., Single Family Detached"
@@ -232,7 +232,7 @@ const SlideOutForm: React.FC<SlideOutProps> = ({
               </label>
               <input
                 type="text"
-                value={formData.landuse_type || ''}
+                value={String((formData as any).landuse_type ?? '')}
                 onChange={(e) => setFormData(prev => ({ ...prev, landuse_type: e.target.value }))}
                 className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded text-white focus:ring-2 focus:ring-blue-500"
                 placeholder="e.g., Residential, Commercial"
@@ -243,7 +243,7 @@ const SlideOutForm: React.FC<SlideOutProps> = ({
                 Description
               </label>
               <textarea
-                value={formData.description || ''}
+                value={String((formData as any).description ?? '')}
                 onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
                 className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded text-white focus:ring-2 focus:ring-blue-500"
                 rows={3}

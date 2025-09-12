@@ -17,19 +17,14 @@ export async function GET(request: Request) {
         FROM landscape.core_lookup_vw
         ORDER BY list_key;
       `;
-      return NextResponse.json({ keys: rows.map((r: { list_key: string }) => r.list_key) });
+      const listRows = rows as unknown as { list_key: string }[]
+      return NextResponse.json({ keys: listRows.map((r) => r.list_key) });
     }
 
     const keys = keyParam.split(',').map((k) => k.trim()).filter(Boolean);
     if (keys.length === 0) return NextResponse.json({}, { status: 200 });
 
-    const rows = await sql<{
-      list_key: string;
-      sort_order: number;
-      code: string;
-      label: string;
-      item_id: number;
-    }[]>`
+    const rows = await sql`
       SELECT list_key, sort_order, code, label, item_id
       FROM landscape.core_lookup_vw
       WHERE list_key = ANY(${keys})
@@ -37,7 +32,7 @@ export async function GET(request: Request) {
     `;
 
     const result: Record<string, { code: string; label: string; sort_order: number }[]> = {};
-    for (const r of rows) {
+    for (const r of rows as unknown as { list_key: string; sort_order: number; code: string; label: string; item_id: number }[]) {
       if (!result[r.list_key]) result[r.list_key] = [];
       result[r.list_key].push({ code: r.code, label: r.label, sort_order: r.sort_order });
     }

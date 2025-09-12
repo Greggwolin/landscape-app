@@ -1,14 +1,12 @@
-import { NextResponse } from 'next/server'
+import { NextResponse, NextRequest } from 'next/server'
 import { sql } from '@/lib/db'
-
-type Params = { params: { id: string } }
 
 // PATCH /api/phases/[id]
 // Allows updating optional descriptive fields for a phase.
 // If columns don't exist (older DB), create them idempotently.
-export async function PATCH(request: Request, context: Params) {
+export async function PATCH(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
-    const id = context.params.id
+    const { id } = await params
     const body = await request.json().catch(() => ({}))
     const label = body.label ?? null
     const description = body.description ?? null
@@ -34,4 +32,3 @@ export async function PATCH(request: Request, context: Params) {
     return NextResponse.json({ error: 'Failed to update phase', details: msg }, { status: 500 })
   }
 }
-

@@ -797,6 +797,7 @@ const PlanningWizard: React.FC = () => {
           phase={detailCard.type === 'parcel' ? detailParcelPhase : null}
           area={detailCard.type === 'parcel' ? detailParcelArea : null}
           isOpen={detailCard.type === 'parcel' && detailCard.isOpen}
+          projectId={(() => { const parts = String(project.id).split('-'); const n = Number(parts[1]); return Number.isFinite(n) && n > 0 ? n : null })()}
           onSave={saveParcelDetails}
           onClose={closeDetailCard}
           onDelete={confirmDeleteParcel}

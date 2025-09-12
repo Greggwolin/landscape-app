@@ -63,7 +63,7 @@ export async function GET(request: Request) {
     }
 
     const byTable: Record<string, TableInfo> = Object.fromEntries(
-      tables.map((t: { table_name: string }) => [t.table_name, { columns: [], foreignKeys: [] }])
+      (tables as unknown as { table_name: string }[]).map((t) => [t.table_name, { columns: [], foreignKeys: [] }])
     );
 
     for (const c of columns as Column[]) {

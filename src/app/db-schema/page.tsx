@@ -28,32 +28,21 @@ export default async function DbSchemaPage() {
       </div>
     )
   }
-  const tables = await sql<{ table_name: string }[]>`
+  const tables = await sql`
     SELECT table_name
     FROM information_schema.tables
     WHERE table_schema = 'landscape' AND table_type = 'BASE TABLE'
     ORDER BY table_name;
   `
 
-  const columns = await sql<{
-    table_name: string
-    column_name: string
-    data_type: string
-    is_nullable: 'YES' | 'NO'
-    ordinal_position: number
-  }[]>`
+  const columns = await sql`
     SELECT table_name, column_name, data_type, is_nullable, ordinal_position
     FROM information_schema.columns
     WHERE table_schema = 'landscape'
     ORDER BY table_name, ordinal_position;
   `
 
-  const fks = await sql<{
-    table_name: string
-    column_name: string
-    foreign_table_name: string
-    foreign_column_name: string
-  }[]>`
+  const fks = await sql`
     SELECT 
       tc.table_name AS table_name,
       kcu.column_name AS column_name,
@@ -72,7 +61,15 @@ export default async function DbSchemaPage() {
     tables.map(t => [t.table_name, { columns: [], foreignKeys: [] } as TableInfo])
   )
 
-  for (const c of columns) {
+  const columnsRows = columns as unknown as {
+    table_name: string
+    column_name: string
+    data_type: string
+    is_nullable: 'YES' | 'NO'
+    ordinal_position: number
+  }[]
+
+  for (const c of columnsRows) {
     if (!byTable[c.table_name]) byTable[c.table_name] = { columns: [], foreignKeys: [] }
     byTable[c.table_name].columns.push({
       name: c.column_name,
@@ -82,7 +79,14 @@ export default async function DbSchemaPage() {
     })
   }
 
-  for (const fk of fks) {
+  const fksRows = fks as unknown as {
+    table_name: string
+    column_name: string
+    foreign_table_name: string
+    foreign_column_name: string
+  }[]
+
+  for (const fk of fksRows) {
     if (!byTable[fk.table_name]) byTable[fk.table_name] = { columns: [], foreignKeys: [] }
     byTable[fk.table_name].foreignKeys.push({
       column: fk.column_name,

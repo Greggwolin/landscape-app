@@ -1,11 +1,9 @@
-import { NextResponse } from 'next/server'
+import { NextResponse, NextRequest } from 'next/server'
 import { sql } from '../../../../../../lib/db'
 
-type Params = { params: { id: string } }
-
-export async function GET(_req: Request, context: Params) {
+export async function GET(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
-    const id = context.params.id
+    const { id } = await params
     const rows = await sql`
       SELECT fv.party_id, p.name, fv.role, fv.note_id, n.body AS note
       FROM landscape.core_fin_fact_vendor fv
@@ -22,9 +20,9 @@ export async function GET(_req: Request, context: Params) {
   }
 }
 
-export async function POST(request: Request, context: Params) {
+export async function POST(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
-    const id = context.params.id
+    const { id } = await params
     const body = await request.json().catch(() => ({}))
     let party_id = body?.party_id ?? null
     const vendor_name = body?.vendor_name ?? null
@@ -53,9 +51,9 @@ export async function POST(request: Request, context: Params) {
   }
 }
 
-export async function DELETE(request: Request, context: Params) {
+export async function DELETE(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
-    const id = context.params.id
+    const { id } = await params
     const { searchParams } = new URL(request.url)
     const partyId = searchParams.get('party_id')
     if (!partyId) return NextResponse.json({ error: 'party_id required' }, { status: 400 })

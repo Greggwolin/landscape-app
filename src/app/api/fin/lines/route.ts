@@ -34,7 +34,7 @@ export async function GET(request: Request) {
           amount_with_contingency?: number | null
         }[] = []
     try {
-      rows = await sql`
+      rows = (await sql`
         SELECT v.fact_id, v.budget_id, v.pe_level::text AS pe_level, v.pe_id,
                v.category_id, c.code AS category_code,
                v.uom_code, u.name AS uom_name,
@@ -51,9 +51,9 @@ export async function GET(request: Request) {
           AND v.pe_level = ${peLevel}::landscape.pe_level
           AND v.pe_id = ${peId}
         ORDER BY v.fact_id DESC
-      `
+      `) as unknown as typeof rows
     } catch {
-      rows = await sql`
+      rows = (await sql`
         SELECT f.fact_id, f.budget_id, f.pe_level::text AS pe_level, f.pe_id,
                f.category_id, c.code AS category_code,
                f.uom_code, u.name AS uom_name,
@@ -68,7 +68,7 @@ export async function GET(request: Request) {
           AND f.pe_level = ${peLevel}::landscape.pe_level
           AND f.pe_id = ${peId}
         ORDER BY f.fact_id DESC
-      `
+      `) as unknown as typeof rows
     }
     return NextResponse.json(rows)
   } catch (e: unknown) {

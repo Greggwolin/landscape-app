@@ -13,7 +13,7 @@ export async function POST() {
     await sql`CREATE SCHEMA IF NOT EXISTS land_v2`;
 
     // Create enum type if it doesn't exist in land_v2
-    const enumExists = await sql<[{ exists: boolean }]>`
+    const enumExists = await sql`
       SELECT EXISTS (
         SELECT 1
         FROM pg_type t
@@ -22,7 +22,7 @@ export async function POST() {
       ) AS exists
     `
 
-    if (!enumExists[0]?.exists) {
+    if ((enumExists as unknown as { exists: boolean }[])[0]?.exists !== true) {
       await sql`CREATE TYPE land_v2.code_token_kind_t AS ENUM ('published','placeholder','numeric','mixed')`;
     }
 
@@ -71,13 +71,13 @@ export async function POST() {
     `
 
     // Attach trigger
-    const trgExists = await sql<[{ exists: boolean }]>`
+    const trgExists = await sql`
       SELECT EXISTS (
         SELECT 1 FROM pg_trigger
         WHERE tgname = 'trg_glossary_zoning_updated_at'
       ) AS exists
     `
-    if (!trgExists[0]?.exists) {
+    if ((trgExists as unknown as { exists: boolean }[])[0]?.exists !== true) {
       await sql`
         CREATE TRIGGER trg_glossary_zoning_updated_at
         BEFORE UPDATE ON land_v2.glossary_zoning
@@ -86,25 +86,25 @@ export async function POST() {
     }
 
     // Add CHECK constraints idempotently for mapped_use
-    const hasLenChk = await sql<[{ exists: boolean }]>`
+    const hasLenChk = await sql`
       SELECT EXISTS (
         SELECT 1 FROM pg_constraint c
         JOIN pg_namespace n ON n.oid = c.connamespace
         WHERE c.conname = 'glossary_zoning_mapped_use_len_chk' AND n.nspname = 'land_v2'
       ) AS exists
     `
-    if (!hasLenChk[0]?.exists) {
+    if ((hasLenChk as unknown as { exists: boolean }[])[0]?.exists !== true) {
       await sql`ALTER TABLE land_v2.glossary_zoning ADD CONSTRAINT glossary_zoning_mapped_use_len_chk CHECK (char_length(mapped_use) <= 8)`
     }
 
-    const hasUpperChk = await sql<[{ exists: boolean }]>`
+    const hasUpperChk = await sql`
       SELECT EXISTS (
         SELECT 1 FROM pg_constraint c
         JOIN pg_namespace n ON n.oid = c.connamespace
         WHERE c.conname = 'glossary_zoning_mapped_use_upper_chk' AND n.nspname = 'land_v2'
       ) AS exists
     `
-    if (!hasUpperChk[0]?.exists) {
+    if ((hasUpperChk as unknown as { exists: boolean }[])[0]?.exists !== true) {
       await sql`ALTER TABLE land_v2.glossary_zoning ADD CONSTRAINT glossary_zoning_mapped_use_upper_chk CHECK (mapped_use = UPPER(mapped_use))`
     }
 

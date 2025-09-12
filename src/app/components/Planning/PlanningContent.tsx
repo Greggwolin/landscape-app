@@ -196,6 +196,7 @@ const PlanningContent: React.FC<Props> = ({ projectId = null }) => {
                 phase={detailCtx.phase}
                 area={detailCtx.area}
                 isOpen={true}
+                projectId={projectId ?? null}
                 onSave={async (_areaId, _phaseId, _parcelId, updates: any) => {
                   try {
                     await fetch(`/api/parcels/${detailCtx.parcel.dbId}`, {

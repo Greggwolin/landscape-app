@@ -9,17 +9,7 @@ export async function GET(request: Request) {
 
     // Base category list (active only)
     // Optionally filter by PE applicability if pe_level is provided and valid
-    const categories = await sql<{
-      category_id: number
-      code: string
-      kind: string
-      class: string | null
-      event: string | null
-      scope: string | null
-      detail: string | null
-      uom_codes: string[] | null
-      pe_levels: string[] | null
-    }[]>`
+    const categories = await sql`
       WITH base AS (
         SELECT c.category_id, c.code, c.kind, c.class, c.event, c.scope, c.detail
         FROM landscape.core_fin_category c
@@ -40,12 +30,22 @@ export async function GET(request: Request) {
 
     // Expand UoM names
     const distinctUoms = Array.from(new Set(categories.flatMap(r => r.uom_codes ?? [])))
-    const uomRows = distinctUoms.length > 0 ? await sql<{ uom_code: string; name: string }[]>`
+    const uomRows = distinctUoms.length > 0 ? await sql`
       SELECT uom_code, name FROM landscape.core_fin_uom WHERE uom_code = ANY(${distinctUoms})
     ` : []
-    const uomMap = new Map<string, string>(uomRows.map((r) => [r.uom_code, r.name]))
+    const uomMap = new Map<string, string>((uomRows as unknown as { uom_code: string; name: string }[]).map((r) => [r.uom_code, r.name]))
 
-    const result = categories.map(r => ({
+    const result = (categories as unknown as {
+      category_id: number
+      code: string
+      kind: string
+      class: string | null
+      event: string | null
+      scope: string | null
+      detail: string | null
+      uom_codes: string[] | null
+      pe_levels: string[] | null
+    }[]).map(r => ({
       category_id: r.category_id,
       code: r.code,
       kind: r.kind,

@@ -1,11 +1,9 @@
-import { NextResponse } from 'next/server'
+import { NextResponse, NextRequest } from 'next/server'
 import { sql } from '../../../../../lib/db'
 
-type Params = { params: { id: string } }
-
-export async function PATCH(request: Request, context: Params) {
+export async function PATCH(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
-    const id = context.params.id
+    const { id } = await params
     const body = await request.json().catch(() => ({}))
     const { code, kind, class: cls, event, scope, detail, is_active, uoms, pe_levels } = body
 
@@ -38,9 +36,9 @@ export async function PATCH(request: Request, context: Params) {
   }
 }
 
-export async function DELETE(_req: Request, context: Params) {
+export async function DELETE(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
-    const id = context.params.id
+    const { id } = await params
     try {
       await sql`DELETE FROM landscape.core_fin_category WHERE category_id = ${id}::bigint`
       return NextResponse.json({ ok: true })

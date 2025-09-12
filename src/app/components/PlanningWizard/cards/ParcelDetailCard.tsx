@@ -398,23 +398,7 @@ const ParcelDetailCard: React.FC<ParcelDetailCardProps> = ({
                 </div>
               </div>
 
-              {/* Status */}
-              <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">
-                  Status
-                </label>
-                <select
-                  value={formData.status}
-                  onChange={(e) => handleFormChange('status', e.target.value)}
-                  className="w-full bg-gray-700 border border-gray-600 rounded-md px-3 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500"
-                >
-                  <option value="Planned">Planned</option>
-                  <option value="In Design">In Design</option>
-                  <option value="Approved">Approved</option>
-                  <option value="Under Construction">Under Construction</option>
-                  <option value="Complete">Complete</option>
-                </select>
-              </div>
+              {/* Status removed per spec */}
 
               {/* Land Use Family */}
               <div>
@@ -511,12 +495,12 @@ const ParcelDetailCard: React.FC<ParcelDetailCardProps> = ({
                 <div className="text-xs text-gray-400 space-y-1">
                   <div>Area: {area.name}</div>
                   <div>Phase: {phase.name}</div>
-                  <div>Land Use: {landUseOptions.find(opt => opt.value === formData.landUse)?.label}</div>
+                  <div>Land Use: {formData.landUse}</div>
                   <div>Acres: {formData.acres.toFixed(1)}</div>
                   <div>Units: {formData.units}</div>
                   {formData.frontage > 0 && <div>Frontage: {formData.frontage} ft</div>}
                   {formData.product && <div>Product: {formData.product}</div>}
-                  <div>Status: {formData.status}</div>
+                  {/* Status removed */}
                   {formData.acres && formData.units && !['C', 'OS'].includes(formData.landUse) && (
                     <div>Density: {calculateDensity()} units/acre</div>
                   )}

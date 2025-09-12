@@ -43,16 +43,18 @@ export async function GET() {
           ORDER BY family_id, COALESCE(ord, 0), name
         `;
       } catch (error2) {
-        console.error('lu_subtype table issue:', error2.message);
+        const msg2 = error2 instanceof Error ? error2.message : String(error2)
+        console.error('lu_subtype table issue:', msg2);
         return NextResponse.json([]);
       }
     }
 
     return NextResponse.json(subtypes || []);
   } catch (error) {
+    const msg = error instanceof Error ? error.message : String(error)
     console.error('Error fetching subtypes:', error);
     return NextResponse.json(
-      { error: 'Failed to fetch subtypes', details: error.message },
+      { error: 'Failed to fetch subtypes', details: msg },
       { status: 500 }
     );
   }
@@ -78,14 +80,15 @@ export async function POST(request: Request) {
     return NextResponse.json(result[0]);
   } catch (error) {
     console.error('Error creating subtype:', error);
-    if (error.message?.includes('unique')) {
+    const msg = error instanceof Error ? error.message : String(error)
+    if (msg.includes('unique')) {
       return NextResponse.json(
         { error: 'Subtype code already exists for this family' },
         { status: 409 }
       );
     }
     return NextResponse.json(
-      { error: 'Failed to create subtype' },
+      { error: 'Failed to create subtype', details: msg },
       { status: 500 }
     );
   }
@@ -124,9 +127,10 @@ export async function PUT(request: Request) {
 
     return NextResponse.json(result[0]);
   } catch (error) {
+    const msg = error instanceof Error ? error.message : String(error)
     console.error('Error updating subtype:', error);
     return NextResponse.json(
-      { error: 'Failed to update subtype' },
+      { error: 'Failed to update subtype', details: msg },
       { status: 500 }
     );
   }
@@ -161,9 +165,10 @@ export async function DELETE(request: Request) {
 
     return NextResponse.json({ message: 'Subtype deleted successfully' });
   } catch (error) {
+    const msg = error instanceof Error ? error.message : String(error)
     console.error('Error deleting subtype:', error);
     return NextResponse.json(
-      { error: 'Failed to delete subtype' },
+      { error: 'Failed to delete subtype', details: msg },
       { status: 500 }
     );
   }

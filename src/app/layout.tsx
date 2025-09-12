@@ -6,6 +6,9 @@ import './globals.css';  // Add this line
 export const metadata: Metadata = {
   title: "Landscape (Materio Skin)", 
   description: "UI/UX-first prototype with MUI shell",
+  icons: {
+    icon: '/favicon.ico',
+  },
 };
 
 export default function RootLayout({ children }: { children: ReactNode }) {

@@ -35,16 +35,18 @@ export async function GET() {
           ORDER BY name
         `;
       } catch (error2) {
-        console.error('lu_family table does not exist:', error2.message);
+        const msg2 = error2 instanceof Error ? error2.message : String(error2)
+        console.error('lu_family table does not exist:', msg2);
         return NextResponse.json([]);
       }
     }
 
     return NextResponse.json(families || []);
   } catch (error) {
+    const msg = error instanceof Error ? error.message : String(error)
     console.error('Error fetching families:', error);
     return NextResponse.json(
-      { error: 'Failed to fetch families', details: error.message },
+      { error: 'Failed to fetch families', details: msg },
       { status: 500 }
     );
   }
@@ -69,9 +71,10 @@ export async function POST(request: Request) {
 
     return NextResponse.json(result[0]);
   } catch (error) {
+    const msg = error instanceof Error ? error.message : String(error)
     console.error('Error creating family:', error);
     return NextResponse.json(
-      { error: 'Failed to create family' },
+      { error: 'Failed to create family', details: msg },
       { status: 500 }
     );
   }
@@ -108,9 +111,10 @@ export async function PUT(request: Request) {
 
     return NextResponse.json(result[0]);
   } catch (error) {
+    const msg = error instanceof Error ? error.message : String(error)
     console.error('Error updating family:', error);
     return NextResponse.json(
-      { error: 'Failed to update family' },
+      { error: 'Failed to update family', details: msg },
       { status: 500 }
     );
   }
@@ -145,9 +149,10 @@ export async function DELETE(request: Request) {
 
     return NextResponse.json({ message: 'Family deleted successfully' });
   } catch (error) {
+    const msg = error instanceof Error ? error.message : String(error)
     console.error('Error deleting family:', error);
     return NextResponse.json(
-      { error: 'Failed to delete family' },
+      { error: 'Failed to delete family', details: msg },
       { status: 500 }
     );
   }

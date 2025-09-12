@@ -1,14 +1,12 @@
-import { NextResponse } from 'next/server'
+import { NextResponse, NextRequest } from 'next/server'
 import { sql } from '@/lib/db'
-
-type Params = { params: { id: string } }
 
 // PATCH /api/parcels/[id]
 // Accepts either UI field names (acres, units, efficiency, product, usecode, frontfeet)
 // or DB column names (acres_gross, units_total, plan_efficiency, lot_product, landuse_code, lots_frontfeet)
-export async function PATCH(request: Request, context: Params) {
+export async function PATCH(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
-    const id = context.params.id
+    const { id } = await params
     const body = await request.json().catch(() => ({}))
 
     // Map UI-friendly names to DB columns; allow both
@@ -37,4 +35,3 @@ export async function PATCH(request: Request, context: Params) {
     return NextResponse.json({ error: 'Failed to update parcel', details: msg }, { status: 500 })
   }
 }
-

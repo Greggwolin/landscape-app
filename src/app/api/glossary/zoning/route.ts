@@ -190,8 +190,8 @@ export async function DELETE(request: Request) {
     if (!jurisdiction_display || !code) {
       return NextResponse.json({ error: 'jurisdiction_display and code are required' }, { status: 400 })
     }
-    const res = await sql<{ one: number }[]>`DELETE FROM land_v2.glossary_zoning WHERE jurisdiction_display = ${jurisdiction_display} AND local_code_raw = ${code} RETURNING 1 as one`
-    return NextResponse.json({ deleted: res.length ?? 0 })
+    const res = await sql`DELETE FROM land_v2.glossary_zoning WHERE jurisdiction_display = ${jurisdiction_display} AND local_code_raw = ${code} RETURNING 1 as one`
+    return NextResponse.json({ deleted: (res as unknown[]).length ?? 0 })
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error)
     console.error('DELETE glossary/zoning error:', error)

@@ -188,7 +188,8 @@ export async function POST() {
           }
         }
       } catch (error) {
-        console.log(`Error adding ${landuse.code}:`, error.message);
+        const msg = error instanceof Error ? error.message : String(error)
+        console.log(`Error adding ${landuse.code}:`, msg);
       }
     }
 
@@ -202,9 +203,10 @@ export async function POST() {
     });
     
   } catch (error) {
+    const msg = error instanceof Error ? error.message : String(error)
     console.error('Error seeding land use data:', error);
     return NextResponse.json(
-      { error: 'Failed to seed land use data', details: error.message },
+      { error: 'Failed to seed land use data', details: msg },
       { status: 500 }
     );
   }
